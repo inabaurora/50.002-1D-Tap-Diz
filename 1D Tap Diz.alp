@@ -16,10 +16,13 @@
     <src>controlunit.luc</src>
     <src>compare.luc</src>
     <src>shifter.luc</src>
+    <src>multi_dec_ctr.luc</src>
     <component>reset_conditioner.luc</component>
     <component>edge_detector.luc</component>
+    <src>random_row.luc</src>
     <component>button_conditioner.luc</component>
     <src>boolean.luc</src>
+    <src>decimal_counter.luc</src>
     <constraint>custom.acf</constraint>
     <constraint>custom.xdc</constraint>
   </files>

@@ -14,7 +14,10 @@ module controlunit (
     output asel[2],
     output bsel[3],
     output we,
-    output wdsel[2]
+    output wdsel[2],
+    
+    output combo_inc[16],
+    output score_inc[16]
   ) {
   
   const SLOWCLOCK_DEFAULT = 30;
@@ -78,12 +81,20 @@ module controlunit (
       
       BRANCH_CHECK_INPUT,
       COMBO_PERFECT,
-      SCORE_PERFECT,
+      BRANCH_SCORE_PERFECT,
+      MULTIPLIER_1_PERFECT,
+      MULTIPLIER_2_PERFECT,
+      MULTIPLIER_4_PERFECT,
       ADD_PERFECT,
+      RECORD_PERFECT,
       CLEAR_PERFECT,
       COMBO_GOOD,
-      SCORE_GOOD,
+      BRANCH_SCORE_GOOD,
+      MULTIPLIER_1_GOOD,
+      MULTIPLIER_2_GOOD,
+      MULTIPLIER_4_GOOD,
       ADD_GOOD,
+      RECORD_GOOD,
       CLEAR_GOOD,
       COMBO_MISS,
       CLEAR_MISS,
@@ -122,6 +133,9 @@ module controlunit (
     bsel = 0;
     we = 0;
     wdsel = 0;
+    
+    combo_inc = 0;
+    score_inc = 0;
     
     slowClockEdge.in = slowClock.value[SLOWCLOCK_DEFAULT-1];
     
@@ -320,6 +334,8 @@ module controlunit (
         asel = 2b00;
         we = 1;
         
+        combo_inc = 5;
+        
         gameFSM.d = gameFSM.CHECK_COUNT;
         
       gameFSM.CHECK_COUNT:
@@ -382,8 +398,8 @@ module controlunit (
         
       gameFSM.CLEAR_3:
         alufn = OR;
-        ra = 4h0;
-        rb = 4h1;
+        ra = 4h3;
+        rb = 4hd;
         rc = 4hd;
         asel = 2b00;
         bsel = 3b000;
@@ -403,7 +419,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_CLEAR;
         
       gameFSM.BRANCH_CLEAR:
-        rb = 4hd;
+        rb = 4he;
         
         if (rb_fromreg == 16h0) {
           gameFSM.d = gameFSM.GAME_IDLE;
@@ -526,14 +542,46 @@ module controlunit (
         bsel = 3b100;
         we = 1;
         
-        gameFSM.d = gameFSM.SCORE_PERFECT;
+        combo_inc = 1;
         
-      gameFSM.SCORE_PERFECT:
-        alufn = MUL;
+        gameFSM.d = gameFSM.BRANCH_SCORE_PERFECT;
+        
+      gameFSM.BRANCH_SCORE_PERFECT:
         rb = 4h5;
+        
+        if (rb_fromreg <= 50){
+          gameFSM.d = gameFSM.MULTIPLIER_1_PERFECT;
+        }
+        else if (rb_fromreg <= 100){
+          gameFSM.d = gameFSM.MULTIPLIER_2_PERFECT;
+        }
+        else {
+          gameFSM.d = gameFSM.MULTIPLIER_4_PERFECT;
+        }
+      
+      gameFSM.MULTIPLIER_1_PERFECT:
+        alufn = MUL;
         rc = 4hc;
         asel = 2b10;
-        bsel = 3b000;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.ADD_PERFECT;
+        
+      gameFSM.MULTIPLIER_2_PERFECT:
+        alufn = MUL;
+        rc = 4hc;
+        asel = 2b10;
+        bsel = 3b110;
+        we = 1;
+        
+        gameFSM.d = gameFSM.ADD_PERFECT;
+        
+      gameFSM.MULTIPLIER_4_PERFECT:
+        alufn = MUL;
+        rc = 4hc;
+        asel = 2b10;
+        bsel = 3b111;
         we = 1;
         
         gameFSM.d = gameFSM.ADD_PERFECT;
@@ -547,8 +595,15 @@ module controlunit (
         bsel = 3b000;
         we = 1;
         
-        gameFSM.d = gameFSM.CLEAR_PERFECT;
+        gameFSM.d = gameFSM.RECORD_PERFECT;
+       
+      gameFSM.RECORD_PERFECT:
+        rb = 4hc;
         
+        score_inc = rb_fromreg;
+        
+        gameFSM.d = gameFSM.CLEAR_PERFECT;
+         
       gameFSM.CLEAR_PERFECT:
         alufn = AND;
         ra = 4ha;
@@ -567,17 +622,49 @@ module controlunit (
         bsel = 3b100;
         we = 1;
         
-        gameFSM.d = gameFSM.SCORE_GOOD;
+        combo_inc = 1;
         
-      gameFSM.SCORE_GOOD:
-        alufn = MUL;
+        gameFSM.d = gameFSM.BRANCH_SCORE_GOOD;
+        
+      gameFSM.BRANCH_SCORE_GOOD:
         rb = 4h5;
+        
+        if (rb_fromreg <= 50){
+          gameFSM.d = gameFSM.MULTIPLIER_1_GOOD;
+        }
+        else if (rb_fromreg <= 100){
+          gameFSM.d = gameFSM.MULTIPLIER_2_GOOD;
+        }
+        else {
+          gameFSM.d = gameFSM.MULTIPLIER_4_GOOD;
+        }
+        
+      gameFSM.MULTIPLIER_1_GOOD:
+        alufn = MUL;
         rc = 4hc;
         asel = 2b01;
-        bsel = 3b000;
+        bsel = 3b100;
         we = 1;
         
-        gameFSM.d  = gameFSM.ADD_GOOD;
+        gameFSM.d = gameFSM.ADD_GOOD;
+        
+      gameFSM.MULTIPLIER_2_GOOD:
+        alufn = MUL;
+        rc = 4hc;
+        asel = 2b01;
+        bsel = 3b110;
+        we = 1;
+        
+        gameFSM.d = gameFSM.ADD_GOOD;
+        
+      gameFSM.MULTIPLIER_4_GOOD:
+        alufn = MUL;
+        rc = 4hc;
+        asel = 2b01;
+        bsel = 3b111;
+        we = 1;
+        
+        gameFSM.d = gameFSM.ADD_GOOD;
         
       gameFSM.ADD_GOOD:
         alufn = ADD;
@@ -587,6 +674,13 @@ module controlunit (
         asel = 2b00;
         bsel = 3b000;
         we = 1;
+        
+        gameFSM.d = gameFSM.RECORD_GOOD;
+        
+      gameFSM.RECORD_GOOD:
+        rb = 4hc;
+        
+        score_inc = rb_fromreg;
         
         gameFSM.d = gameFSM.CLEAR_GOOD;
         
@@ -605,6 +699,8 @@ module controlunit (
         rc = 4h5;
         asel = 2b00;
         we = 1;
+        
+        combo_inc = 5;
         
         gameFSM.d = gameFSM.CLEAR_MISS;
         

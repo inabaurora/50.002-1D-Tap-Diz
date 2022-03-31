@@ -1,38 +1,3 @@
-Errors in file C:\Users\royde\AlchitryProjects\1D Tap Diz\source\au_top.luc:
-    Line 48, Column 4 : The name "test_led" could not be resolved
-    Line 8, Column 4 : "gameplay_buttons" was never used
-    Line 10, Column 4 : The output "lane_1_LED" was never assigned
-    Line 11, Column 4 : The output "lane_2_LED" was never assigned
-    Line 12, Column 4 : The output "lane_3_LED" was never assigned
-    Line 13, Column 4 : The output "lane_4_LED" was never assigned
-    Line 15, Column 4 : The output "combo_seg" was never assigned
-    Line 16, Column 4 : The output "combo_sel" was never assigned
-    Line 18, Column 4 : The output "score_seg" was never assigned
-    Line 19, Column 4 : The output "score_sel" was never assigned
-    Line 44, Column 20 : The name "test_button" could not be resolved
-Errors in file C:\Users\royde\AlchitryProjects\1D Tap Diz\source\betacpu.luc:
-    Line 23, Column 6 : The signals "data, rc, we, rb, ra" were not assigned
-    Line 5, Column 4 : "button" was never used
-    Line 6, Column 4 : "reset" was never used
-    Line 8, Column 4 : The output "column_1" was never assigned
-    Line 9, Column 4 : The output "column_2" was never assigned
-    Line 10, Column 4 : The output "column_3" was never assigned
-    Line 11, Column 4 : The output "column_4" was never assigned
-    Line 13, Column 4 : The output "combo" was never assigned
-    Line 14, Column 4 : The output "score" was never assigned
-    Line 15, Column 2 : mismatched input ')' expecting {'input', 'output', 'inout', 'signed'}
-    Line 17, Column 2 : The signals "alufn_signal, a, b" were not assigned
-    Line 22, Column 6 : The signals "button, randgen, rb_fromreg" were not assigned
-Errors in file C:\Users\royde\AlchitryProjects\1D Tap Diz\source\controlunit.luc:
-    Line 109, Column 2 : "CMPLT" was never used
-    Line 18, Column 2 : mismatched input ')' expecting {'input', 'output', 'inout', 'signed'}
-    Line 94, Column 6 : missing {TYPE_ID, CONST_ID, SPACE_ID} at '}'
-    Line 99, Column 2 : "SUB" was never used
-    Line 100, Column 2 : "MUL" was never used
-    Line 103, Column 2 : "XOR" was never used
-    Line 104, Column 2 : "ALDR" was never used
-    Line 106, Column 2 : "SHR" was never used
-    Line 107, Column 2 : "SRA" was never used
 Errors in file C:\Users\royde\AlchitryProjects\1D Tap Diz\constraint\custom.acf:
     Line 88, Column 16 : missing {FREQ_UNIT, BASIC_NAME} at ';'
     Line 20, Column 23 : missing {FREQ_UNIT, BASIC_NAME} at ';'

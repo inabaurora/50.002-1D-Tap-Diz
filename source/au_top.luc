@@ -32,6 +32,8 @@ module au_top (
     .rst(rst){
       multi_seven_seg seg_combo;
       multi_seven_seg seg_score;
+      multi_dec_ctr combo_dec_ctr;
+      multi_dec_ctr score_dec_ctr;
       betacpu game_beta;
     }
   }
@@ -54,8 +56,10 @@ module au_top (
     lane_3_LED = game_beta.column_3[6:0];
     lane_4_LED = game_beta.column_4[6:0];
     
-    seg_combo.values = game_beta.combo;
-    seg_score.values = game_beta.score;
+    combo_dec_ctr.inc = game_beta.comboinc;
+    score_dec_ctr.inc = game_beta.scoreinc;
+    seg_combo.values = combo_dec_ctr.digits;
+    seg_score.values = score_dec_ctr.digits;
     
     combo_seg = ~seg_combo.seg;
     combo_sel = ~seg_combo.sel;
