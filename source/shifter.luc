@@ -1,0 +1,17 @@
+module shifter (
+    input a[16],
+    input b[5],
+    input alufn_signal[6],
+    output c[16]
+  ) {
+
+  always {
+    case(alufn_signal[1:0]) {
+      default: c = a;
+      b00: c = a << b;            // left shift
+      b01: c = a >> b;            // right shit
+      b11: c = $signed(a) >>> b;  // signed integer right shift
+    }
+    
+  }
+}

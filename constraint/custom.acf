@@ -1,0 +1,88 @@
+pin clk CLOCK;
+clock clk 100MHz;
+
+pin rst_n RESET;
+
+pin led[0] LED0;
+pin led[1] LED1;
+pin led[2] LED2;
+pin led[3] LED3;
+pin led[4] LED4;
+pin led[5] LED5;
+pin led[6] LED6;
+pin led[7] LED7;
+
+// flip the Tx/Rx lines
+pin usb_rx USB_TX;
+pin usb_tx USB_RX;
+
+//Playing buttons
+pin gameplay_buttons[0];
+pin gameplay_buttons[1];
+pin gameplay_buttons[2];
+pin gameplay_buttons[3];
+
+//LEDs for column 1
+pin lane_1_LED[0];
+pin lane_1_LED[1];
+pin lane_1_LED[2];
+pin lane_1_LED[3];
+pin lane_1_LED[4];
+pin lane_1_LED[5];
+pin lane_1_LED[6];
+
+//LEDs for column 2
+pin lane_2_LED[0];
+pin lane_2_LED[1];
+pin lane_2_LED[2];
+pin lane_2_LED[3];
+pin lane_2_LED[4];
+pin lane_2_LED[5];
+pin lane_2_LED[6];
+
+//LEDs for column 3
+pin lane_3_LED[0];
+pin lane_3_LED[1];
+pin lane_3_LED[2];
+pin lane_3_LED[3];
+pin lane_3_LED[4];
+pin lane_3_LED[5];
+pin lane_3_LED[6];
+
+//LEDs for column 4
+pin lane_4_LED[0];
+pin lane_4_LED[1];
+pin lane_4_LED[2];
+pin lane_4_LED[3];
+pin lane_4_LED[4];
+pin lane_4_LED[5];
+pin lane_4_LED[6];
+
+//Combo 7 segment display
+pin combo_seg[0];
+pin combo_seg[1];
+pin combo_seg[2];
+pin combo_seg[3];
+pin combo_seg[4];
+pin combo_seg[5];
+pin combo_seg[6];
+pin combo_seg[7];
+
+pin combo_sel[0];
+pin combo_sel[1];
+pin combo_sel[2];
+
+//Score 7 segment display
+pin score_seg[0];
+pin score_seg[1];
+pin score_seg[2];
+pin score_seg[3];
+pin score_seg[4];
+pin score_seg[5];
+pin score_seg[6];
+pin score_seg[7];
+
+pin score_sel[0];
+pin score_sel[1];
+pin score_sel[2];
+pin score_sel[3];

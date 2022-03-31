@@ -1,0 +1,18 @@
+module boolean (
+    input a[16],
+    input b[16],
+    input alufn_signal[6],
+    output c[16]
+  ) {
+
+  always {
+    c = 16b0;
+    
+    case(alufn_signal[3:0]) {
+    default: c = 16b0;
+    b1000: c = a & b;  // return 1 for a and b
+    b1110: c = a | b;  // return 1 for a or b
+    b0110: c = a ^ b;  // return 1 for a xor b
+    b1010: c = a;      // return a
+  }
+}

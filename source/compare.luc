@@ -1,0 +1,20 @@
+module compare (
+    input z,
+    input v,
+    input n,
+    input alufn_signal[6],
+    output c[16]
+  ) {
+
+  always {
+    c = 16b0;
+    
+    case(alufn_signal[2:1]) {
+      default: c[0] = 0;       // only least significant bit will represent the result
+      b01: c[0] = z;           // return z
+      b10: c[0] = n ^ v;       // return n xor v
+      b11: c[0] = z | (n ^ v); // return z or (n xor v)
+    }
+      
+  }
+}

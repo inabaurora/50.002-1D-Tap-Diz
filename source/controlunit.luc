@@ -1,0 +1,678 @@
+module controlunit (
+    input clk,  // clock
+    input rst,  // reset
+    
+    input button[4],
+    input rb_fromreg[16],
+    input randgen[2],
+    
+    //signals
+    output alufn[6],
+    output ra[4],
+    output rb[4],
+    output rc[4],
+    output asel[2],
+    output bsel[3],
+    output we,
+    output wdsel[2]
+  ) {
+  
+  const SLOWCLOCK_DEFAULT = 30;
+  
+  .clk(clk){
+  
+     edge_detector slowClockEdge(#RISE(1), #FALL(0));
+    
+    .rst(rst){
+      
+      counter slowClock(#SIZE(SLOWCLOCK_DEFAULT));
+      
+      dff store_clock;
+      dff rand_store[2];
+      
+      fsm gameFSM = {
+      // difficulty set
+      GAME_START,
+      WAIT_DIFFICULTY,
+      DIFFICULTY_EASY,
+      DIFFICULTY_NORMAL,
+      DIFFICULTY_HARD,
+      SET_COUNT,
+      INC_COUNT,
+      
+      GAME_IDLE,
+      
+      // constant ongoing adjustment of LEDs
+      SHL_COL0,
+      SHL_COL1,
+      SHL_COL2,
+      SHL_COL3,
+      MISS_1,
+      MISS_2,
+      MISS_3,
+      MISS_MASK,
+      CHECK_MISS,
+      BRANCH_CHECK_MISS,
+      BREAK_COMBO,
+      CHECK_COUNT,
+      BRANCH_COUNT,
+      STORE_RAND,
+      ADD_NOTE,
+      
+      CLEAR_1,
+      CLEAR_2,
+      CLEAR_3,
+      CHECK_CLEAR,
+      BRANCH_CLEAR,
+      DISPLAY_SCORE,
+        
+      // upon button press
+      PUSH_COL0,
+      PUSH_COL1,
+      PUSH_COL2,
+      PUSH_COL3,
+      STORE_COL0,
+      STORE_COL1,
+      STORE_COL2,
+      STORE_COL3,
+      
+      BRANCH_CHECK_INPUT,
+      COMBO_PERFECT,
+      SCORE_PERFECT,
+      ADD_PERFECT,
+      CLEAR_PERFECT,
+      COMBO_GOOD,
+      SCORE_GOOD,
+      ADD_GOOD,
+      CLEAR_GOOD,
+      COMBO_MISS,
+      CLEAR_MISS,
+      
+      BRANCH_UPDATE_COLUMN,
+      UPDATE_COL0,
+      UPDATE_COL1,
+      UPDATE_COL2,
+      UPDATE_COL3
+      };
+    }
+  } 
+  // all ALUFN inputs used 
+  const ADD = 6b000000;
+  const MUL = 6b000010;
+  const AND = 6b011000;
+  const OR = 6b011110;
+  const SHL = 6b100000;
+  const CMPEQ = 6b110011;
+  const CMPLE = 6b110111;
+  
+  // all unused ALUFN inputs
+  // const SUB = 6b000001;
+  // const XOR = 6b010110;
+  // const ALDR = 6b011010;
+  // const SHR = 6b100001;
+  // const SRA = 6b100011;
+  // const CMPLT = 6b110101;
+  
+  always {
+    alufn = 0;
+    ra = 0;
+    rb = 0;
+    rc = 0;
+    asel = 0;
+    bsel = 0;
+    we = 0;
+    wdsel = 0;
+    
+    slowClockEdge.in = slowClock.value[SLOWCLOCK_DEFAULT-1];
+    
+    case (gameFSM.q){
+      gameFSM.GAME_START:
+        if (button[0]) {
+          gameFSM.d = gameFSM.WAIT_DIFFICULTY;
+        }
+      
+      gameFSM.WAIT_DIFFICULTY:
+        if (button[1]) {
+          gameFSM.d = gameFSM.DIFFICULTY_EASY;
+        }
+        if (button[2]) {
+          gameFSM.d = gameFSM.DIFFICULTY_NORMAL;
+        }
+        if (button[3]) {
+          gameFSM.d = gameFSM.DIFFICULTY_HARD;
+        }
+      
+      gameFSM.DIFFICULTY_EASY:
+        store_clock.d = 27;
+        
+        rc = 4h8;
+        we = 1;
+        wdsel = 2b01;
+        
+        gameFSM.d = gameFSM.SET_COUNT;
+      
+      gameFSM.DIFFICULTY_NORMAL:
+        store_clock.d = 26;
+        
+        rc = 4h8;
+        we = 1;
+        wdsel = 2b10;
+        
+        gameFSM.d = gameFSM.SET_COUNT;
+        
+      gameFSM.DIFFICULTY_HARD:
+        store_clock.d = 25;
+        
+        rc = 4h8;
+        we = 1;
+        wdsel = 2b11;
+        
+        gameFSM.d = gameFSM.SET_COUNT;
+   
+      gameFSM.SET_COUNT:
+        ra = 4h4;
+        rc = 4h7;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.INC_COUNT;
+        
+      gameFSM.INC_COUNT:
+        alufn = ADD;
+        ra = 4h7;
+        rc = 4h7;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.GAME_IDLE;
+        
+      gameFSM.GAME_IDLE:
+        slowClockEdge.in = slowClock.value[store_clock.q-1];
+        
+        if (button[0]) {
+          gameFSM.d = gameFSM.PUSH_COL0;
+        }
+        
+        if (button[1]) {
+          gameFSM.d = gameFSM.PUSH_COL1;
+        }
+        
+        if (button[2]) {
+          gameFSM.d = gameFSM.PUSH_COL2;
+        }
+        
+        if (button[3]) {
+          gameFSM.d = gameFSM.PUSH_COL3;
+        }
+        
+        if (slowClockEdge.out == b1) {
+          gameFSM.d = gameFSM.SHL_COL0;
+        }
+      
+      // perpetual component of the FSM
+      gameFSM.SHL_COL0:
+        alufn = SHL;
+        ra = 4h0;
+        rc = 4h0;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SHL_COL1;
+        
+      gameFSM.SHL_COL1:
+        alufn = SHL;
+        ra = 4h1;
+        rc = 4h1;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SHL_COL2;
+        
+      gameFSM.SHL_COL2:
+        alufn = SHL;
+        ra = 4h2;
+        rc = 4h2;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SHL_COL3;
+        
+      gameFSM.SHL_COL3:
+        alufn = SHL;
+        ra = 4h3;
+        rc = 4h3;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.MISS_1;
+        
+      gameFSM.MISS_1:
+        alufn = OR;
+        ra = 4h0;
+        rb = 4h1;
+        rc = 4h9;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.MISS_2;
+        
+      gameFSM.MISS_2:
+        alufn = OR;
+        ra = 4h2;
+        rb = 4h9;
+        rc = 4h9;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.MISS_3;
+        
+      gameFSM.MISS_3:
+        alufn = OR;
+        ra = 4h3;
+        rb = 4h9;
+        rc = 4h9;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.MISS_MASK;
+        
+      gameFSM.MISS_MASK:
+        alufn = AND;
+        ra = 4h9;
+        rc = 4h9;
+        asel = 2b00;
+        bsel = 3b101;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CHECK_MISS;
+        
+      gameFSM.CHECK_MISS:
+        alufn = CMPEQ;
+        ra = 4h9;
+        rc = 4h9;
+        asel = 2b00;
+        bsel = 3b101;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CHECK_MISS;
+        
+      gameFSM.BRANCH_CHECK_MISS:
+        rb = 4h9;
+        
+        if (rb_fromreg == 16h0) {
+          gameFSM.d = gameFSM.CHECK_COUNT;
+        }
+        if (rb_fromreg == 16h1) {
+          gameFSM.d = gameFSM.BREAK_COMBO;
+        }
+        
+      gameFSM.BREAK_COMBO:
+        ra = 4h4;
+        rc = 4h5;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CHECK_COUNT;
+        
+      gameFSM.CHECK_COUNT:
+        alufn = CMPLE;
+        ra = 4h7;
+        rb = 4h8;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_COUNT;
+        
+      gameFSM.BRANCH_COUNT:
+        rb = 4hd;
+        
+        if (rb_fromreg == 16h0) {
+          gameFSM.d = gameFSM.CLEAR_1;
+        }
+        
+        if (rb_fromreg == 16h1) {
+          gameFSM.d = gameFSM.STORE_RAND;
+        }
+      
+      gameFSM.STORE_RAND:
+        rand_store.d = randgen;
+        
+        gameFSM.d = gameFSM.ADD_NOTE;  
+          
+      gameFSM.ADD_NOTE:
+        ra = rand_store.q;
+        rc = rand_store.q;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.INC_COUNT;
+        
+      gameFSM.CLEAR_1:
+        alufn = OR;
+        ra = 4h0;
+        rb = 4h1;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CLEAR_2;
+        
+      gameFSM.CLEAR_2:
+        alufn = OR;
+        ra = 4h2;
+        rb = 4hd;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CLEAR_3;
+        
+      gameFSM.CLEAR_3:
+        alufn = OR;
+        ra = 4h0;
+        rb = 4h1;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CHECK_CLEAR;
+        
+      gameFSM.CHECK_CLEAR:
+        alufn = CMPEQ;
+        ra = 4hd;
+        rb = 4h4;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CLEAR;
+        
+      gameFSM.BRANCH_CLEAR:
+        rb = 4hd;
+        
+        if (rb_fromreg == 16h0) {
+          gameFSM.d = gameFSM.GAME_IDLE;
+        }
+        
+        if (rb_fromreg == 16h1) {
+          gameFSM.d = gameFSM.DISPLAY_SCORE;
+        }
+      
+      gameFSM.DISPLAY_SCORE:
+        ra = 4h4;
+        rc = 4h5;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        if (button[0]) {
+          gameFSM.d = gameFSM.GAME_START;
+        }
+        
+      // scoring component of the FSM
+      gameFSM.PUSH_COL0:
+        alufn = ADD;
+        ra = 4h0;
+        rb = 4h4;
+        rc = 4ha;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.STORE_COL0;
+        
+      gameFSM.PUSH_COL1:
+        alufn = ADD;
+        ra = 4h1;
+        rb = 4h4;
+        rc = 4ha;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.STORE_COL1;
+        
+      gameFSM.PUSH_COL2:
+        alufn = ADD;
+        ra = 4h2;
+        rb = 4h4;
+        rc = 4ha;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.STORE_COL2;
+        
+      gameFSM.PUSH_COL3:
+        alufn = ADD;
+        ra = 4h3;
+        rb = 4h4;
+        rc = 4ha;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.STORE_COL3;
+        
+      gameFSM.STORE_COL0:
+        ra = 4h4;
+        rc = 4hb;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CHECK_INPUT;
+        
+      gameFSM.STORE_COL1:
+        rc = 4hb;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CHECK_INPUT;
+        
+      gameFSM.STORE_COL2:
+        rc = 4hb;
+        asel = 2b01;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CHECK_INPUT;
+        
+      gameFSM.STORE_COL3:
+        rc = 4hb;
+        asel = 2b10;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CHECK_INPUT;
+        
+      gameFSM.BRANCH_CHECK_INPUT:
+        rb = 4ha;
+        
+        if (rb_fromreg[7] == 1) {
+          gameFSM.d = gameFSM.COMBO_PERFECT;
+        }
+        else if (rb_fromreg[6] == 1) {
+          gameFSM.d = gameFSM.COMBO_GOOD;
+        }
+        else if (rb_fromreg[5] == 1) {
+          gameFSM.d = gameFSM.COMBO_MISS;
+        }
+        else {
+          gameFSM.d = gameFSM.GAME_IDLE;
+        }
+        
+      gameFSM.COMBO_PERFECT:
+        alufn = ADD;
+        ra = 4h5;
+        rc = 4h5;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SCORE_PERFECT;
+        
+      gameFSM.SCORE_PERFECT:
+        alufn = MUL;
+        rb = 4h5;
+        rc = 4hc;
+        asel = 2b10;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.ADD_PERFECT;
+        
+      gameFSM.ADD_PERFECT:
+        alufn = ADD;
+        ra = 4h6;
+        rb = 4hc;
+        rc = 4h6;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CLEAR_PERFECT;
+        
+      gameFSM.CLEAR_PERFECT:
+        alufn = AND;
+        ra = 4ha;
+        rc = 4ha;
+        asel = 2b00;
+        bsel = 3b001;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_UPDATE_COLUMN;
+        
+      gameFSM.COMBO_GOOD:
+        alufn = ADD;
+        ra = 4h5;
+        rc = 4h5;
+        asel = 2b00;
+        bsel = 3b100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SCORE_GOOD;
+        
+      gameFSM.SCORE_GOOD:
+        alufn = MUL;
+        rb = 4h5;
+        rc = 4hc;
+        asel = 2b01;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d  = gameFSM.ADD_GOOD;
+        
+      gameFSM.ADD_GOOD:
+        alufn = ADD;
+        ra = 4h6;
+        rb = 4hc;
+        rc = 4h6;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CLEAR_GOOD;
+        
+      gameFSM.CLEAR_GOOD:
+        alufn = AND;
+        ra = 4ha;
+        rc = 4ha;
+        asel = 2b00;
+        bsel = 3b010;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_UPDATE_COLUMN;
+        
+      gameFSM.COMBO_MISS:
+        ra = 4h4;
+        rc = 4h5;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CLEAR_MISS;
+        
+      gameFSM.CLEAR_MISS:
+        alufn = AND;
+        ra = 4ha;
+        rc = 4ha;
+        asel = 2b00;
+        bsel = 3b011;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_UPDATE_COLUMN;
+        
+      gameFSM.BRANCH_UPDATE_COLUMN:
+        rb = 4hb;
+        
+        if (rb_fromreg == 16h0) {
+          gameFSM.d = gameFSM.UPDATE_COL0;
+        }
+        if (rb_fromreg == 16h1) {
+          gameFSM.d = gameFSM.UPDATE_COL1;
+        }
+        if (rb_fromreg == 16h2) {
+          gameFSM.d = gameFSM.UPDATE_COL2;
+        }
+        if (rb_fromreg == 16h3) {
+          gameFSM.d = gameFSM.UPDATE_COL3;
+        }
+        
+      gameFSM.UPDATE_COL0:
+        ra = 4ha;
+        rb = 4h4;
+        rc = 4h0;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.GAME_IDLE;
+        
+      gameFSM.UPDATE_COL1:
+        ra = 4ha;
+        rb = 4h4;
+        rc = 4h1;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.GAME_IDLE;
+        
+      gameFSM.UPDATE_COL2:
+        ra = 4ha;
+        rb = 4h4;
+        rc = 4h2;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.GAME_IDLE;
+      
+      gameFSM.UPDATE_COL3:
+        ra = 4ha;
+        rb = 4h4;
+        rc = 4h3;
+        asel = 2b00;
+        bsel = 3b000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.GAME_IDLE;
+    }
+  }
+}

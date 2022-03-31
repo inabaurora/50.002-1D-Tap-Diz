@@ -1,0 +1,33 @@
+module buttontest (
+    input clk,  // clock
+    input rst,  // reset
+    input button[1],
+    output out
+  ) {
+  dff buttonoutput[1](#INIT(0),.clk(clk), .rst(rst));
+  fsm buttontest(.clk(clk)) = {OFF, ON};
+  always {
+    case (buttontest.q) {
+      buttontest.OFF:
+        buttonoutput.d = b0;
+        
+        if (button[0]){
+          buttontest.d = buttontest.ON;
+        }
+        else {
+          buttontest.d = buttontest.OFF;
+        }
+        
+      buttontest.ON:
+        buttonoutput.d = b1;
+        
+        if (button[0]){
+          buttontest.d = buttontest.OFF;
+        }
+        else {
+          buttontest.d = buttontest.ON;
+        }
+    }
+    out = buttonoutput.q;
+  }
+}
