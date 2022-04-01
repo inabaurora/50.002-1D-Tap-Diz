@@ -12,10 +12,10 @@ module au_top (
     output lane_3_LED[7],
     output lane_4_LED[7],
     
-    output combo_seg[8], // 7 segment for the combo count
+    output combo_seg[7], // 7 segment for the combo count
     output combo_sel[4], // selection of 7 segment for combo
     
-    output score_seg[8], // 7 segment for the score
+    output score_seg[7], // 7 segment for the score
     output score_sel[4]  // selection of 7 segment for score
   ) {
   
@@ -32,8 +32,10 @@ module au_top (
     .rst(rst){
       multi_seven_seg seg_combo;
       multi_seven_seg seg_score;
+      
       multi_dec_ctr combo_dec_ctr;
       multi_dec_ctr score_dec_ctr;
+      
       betacpu game_beta;
     }
   }

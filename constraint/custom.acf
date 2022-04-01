@@ -17,72 +17,71 @@ pin usb_rx USB_TX;
 pin usb_tx USB_RX;
 
 //Playing buttons
-pin gameplay_buttons[0];
-pin gameplay_buttons[1];
-pin gameplay_buttons[2];
-pin gameplay_buttons[3];
+pin gameplay_buttons[0] B27 pulldown;
+pin gameplay_buttons[1] B33 pulldown;
+pin gameplay_buttons[2] B42 pulldown;
+pin gameplay_buttons[3] B45 pulldown;
 
 //LEDs for column 1
-pin lane_1_LED[0];
-pin lane_1_LED[1];
-pin lane_1_LED[2];
-pin lane_1_LED[3];
-pin lane_1_LED[4];
-pin lane_1_LED[5];
-pin lane_1_LED[6];
+pin lane_1_LED[0] C27;
+pin lane_1_LED[1] C30;
+pin lane_1_LED[2] C33;
+pin lane_1_LED[3] C36;
+pin lane_1_LED[4] C39;
+pin lane_1_LED[5] C42;
+pin lane_1_LED[6] C45;
 
 //LEDs for column 2
-pin lane_2_LED[0];
-pin lane_2_LED[1];
-pin lane_2_LED[2];
-pin lane_2_LED[3];
-pin lane_2_LED[4];
-pin lane_2_LED[5];
-pin lane_2_LED[6];
+pin lane_2_LED[0] C23;
+pin lane_2_LED[1] C20;
+pin lane_2_LED[2] C17;
+pin lane_2_LED[3] C14;
+pin lane_2_LED[4] C11;
+pin lane_2_LED[5] C8;
+pin lane_2_LED[6] C5;
 
 //LEDs for column 3
-pin lane_3_LED[0];
-pin lane_3_LED[1];
-pin lane_3_LED[2];
-pin lane_3_LED[3];
-pin lane_3_LED[4];
-pin lane_3_LED[5];
-pin lane_3_LED[6];
+pin lane_3_LED[0] B28;
+pin lane_3_LED[1] B31;
+pin lane_3_LED[2] B34;
+pin lane_3_LED[3] B37;
+pin lane_3_LED[4] B40;
+pin lane_3_LED[5] B43;
+pin lane_3_LED[6] B46;
 
 //LEDs for column 4
-pin lane_4_LED[0];
-pin lane_4_LED[1];
-pin lane_4_LED[2];
-pin lane_4_LED[3];
-pin lane_4_LED[4];
-pin lane_4_LED[5];
-pin lane_4_LED[6];
+pin lane_4_LED[0] B24;
+pin lane_4_LED[1] B21;
+pin lane_4_LED[2] B18;
+pin lane_4_LED[3] B15;
+pin lane_4_LED[4] B12;
+pin lane_4_LED[5] B9;
+pin lane_4_LED[6] B6;
 
 //Combo 7 segment display
-pin combo_seg[0];
-pin combo_seg[1];
-pin combo_seg[2];
-pin combo_seg[3];
-pin combo_seg[4];
-pin combo_seg[5];
-pin combo_seg[6];
-pin combo_seg[7];
+pin combo_seg[0] A24;
+pin combo_seg[1] A21;
+pin combo_seg[2] A18;
+pin combo_seg[3] A15;
+pin combo_seg[4] A12;
+pin combo_seg[5] A9;
+pin combo_seg[6] A3;
 
-pin combo_sel[0];
-pin combo_sel[1];
-pin combo_sel[2];
+pin combo_sel[0] A23;
+pin combo_sel[1] A20;
+pin combo_sel[2] A17;
+pin combo_sel[3] A14;
 
 //Score 7 segment display
-pin score_seg[0];
-pin score_seg[1];
-pin score_seg[2];
-pin score_seg[3];
-pin score_seg[4];
-pin score_seg[5];
-pin score_seg[6];
-pin score_seg[7];
+pin score_seg[0] A27;
+pin score_seg[1] A30;
+pin score_seg[2] A33;
+pin score_seg[3] A36;
+pin score_seg[4] A39;
+pin score_seg[5] A42;
+pin score_seg[6] A45;
 
-pin score_sel[0];
-pin score_sel[1];
-pin score_sel[2];
-pin score_sel[3];
+pin score_sel[0] A28;
+pin score_sel[1] A31;
+pin score_sel[2] A34;
+pin score_sel[3] A37;

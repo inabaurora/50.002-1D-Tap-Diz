@@ -20,8 +20,12 @@ module betacpu (
   alu game_alu;
   
   .clk(clk){
-    
+    edge_detector clock_detector(#RISE(1), #FALL(0));
     .rst(rst){
+      counter slow_timer_0(#SIZE(1),#DIV(27)); //1 block/s
+      counter slow_timer_1(#SIZE(1),#DIV(26)); //2 block/s
+      counter slow_timer_2(#SIZE(1),#DIV(24)); //4 block/s
+      
       controlunit game_cu;
       regfile game_reg;
       
@@ -30,7 +34,23 @@ module betacpu (
   }
   
   always {
-  
+    //increase slow_clock each time
+    clock_detector.in = 0;
+    game_cu.slow_clock_in = 0;
+    
+    if (game_cu.set_speed == 1) { //DIFFICULTY = EASY
+        clock_detector.in = slow_timer_0.value;
+        game_cu.slow_clock_in = clock_detector.out;
+      }
+    else if (game_cu.set_speed == 2) { //DIFFICULTY = NORMAL
+        clock_detector.in = slow_timer_1.value;
+        game_cu.slow_clock_in = clock_detector.out;
+      }
+    else if (game_cu.set_speed == 3) { //DIFFICULTY = HARD
+        clock_detector.in = slow_timer_2.value;
+        game_cu.slow_clock_in = clock_detector.out;
+      }
+    
     // light arrays to be displayed for the game
     column_1 = game_reg.column_1;
     column_2 = game_reg.column_2;
