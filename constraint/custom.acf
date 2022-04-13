@@ -17,10 +17,14 @@ pin usb_rx USB_TX;
 pin usb_tx USB_RX;
 
 //Playing buttons
-pin gameplay_buttons[0] B27 pulldown;
-pin gameplay_buttons[1] B33 pulldown;
-pin gameplay_buttons[2] B42 pulldown;
-pin gameplay_buttons[3] B45 pulldown;
+pin start_lunatic_button B2 pulldown;
+pin rst_button C24 pulldown;
+pin gameplay_button[0] B27 pulldown;
+pin gameplay_button[1] B33 pulldown;
+pin gameplay_button[2] B42 pulldown;
+pin gameplay_button[3] B45 pulldown;
+pin shifter_button[0] B23 pulldown;
+pin shifter_button[1] B20 pulldown;
 
 //LEDs for column 1
 pin lane_1_LED[0] C27;
@@ -57,6 +61,12 @@ pin lane_4_LED[3] B15;
 pin lane_4_LED[4] B12;
 pin lane_4_LED[5] B9;
 pin lane_4_LED[6] B6;
+
+//LEDs for lunatic scoring
+pin lunatic_LED[0] C12;
+pin lunatic_LED[1] C9;
+pin lunatic_LED[2] C6;
+pin lunatic_LED[3] C3;
 
 //Combo 7 segment display
 pin combo_seg[0] A24;
