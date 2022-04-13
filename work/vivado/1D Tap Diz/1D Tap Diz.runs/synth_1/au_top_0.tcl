@@ -84,30 +84,32 @@ set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
 read_verilog -library xil_defaultlib {
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/adder_19.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/adder_21.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/alu_12.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/betacpu_6.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/boolean_21.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/boolean_23.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/button_conditioner_2.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/compare_20.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/controlunit_16.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/counter_13.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/compare_22.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/controlunit_18.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/counter_14.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/counter_15.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/counter_16.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/counter_17.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/counter_8.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/decimal_counter_11.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/decoder_10.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/edge_detector_23.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/edge_detector_25.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/edge_detector_3.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/lunatic_ROM_13.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/multi_dec_ctr_5.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/multi_seven_seg_4.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/pipeline_7.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/pn_gen_24.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/random_row_18.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/regfile_17.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/pn_gen_26.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/random_row_20.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/regfile_19.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/reset_conditioner_1.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/seven_seg_9.v}
-  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/shifter_22.v}
+  {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/shifter_24.v}
   {C:/Users/royde/AlchitryProjects/1D Tap Diz/work/vivado/1D Tap Diz/1D Tap Diz.srcs/sources_1/imports/verilog/au_top_0.v}
 }
 OPTRACE "Adding files" END { }
