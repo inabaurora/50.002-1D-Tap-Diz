@@ -1,8 +1,8 @@
 module decimal_counter (
     input clk,      // clock
     input rst,      // reset
-    input inc[4],      // increment the counter
-    output ovf[4],     // counter overflowed
+    input inc[5],      // increment the counter
+    output ovf[5],     // counter overflowed
     output value[4] // current value
   ) {
  
@@ -102,6 +102,38 @@ module decimal_counter (
         val.d =  0;
       else                   
         val.d = val.q + 2;   
+    }
+    
+    if (inc == 16) {
+      ovf = 1 + (val.q >= 4);         
+      if (val.q == 9)        
+        val.d = 5;           
+      else if (val.q == 8)
+        val.d = 4;
+      else if (val.q == 7)
+        val.d = 3;
+      else if (val.q == 6)
+        val.d = 2;
+      else if (val.q == 5)
+        val.d = 1;
+      else if (val.q == 4)
+        val.d = 0;
+      else                   
+        val.d = val.q + 6;   
+    }
+    
+    if (inc == 24) {
+      ovf = 2 + (val.q >= 6);   
+      if (val.q == 9)        
+        val.d = 3;          
+      else if (val.q == 8)
+        val.d = 2;
+      else if (val.q == 7)
+        val.d = 1;
+      else if (val.q == 6)
+        val.d = 0;
+      else                   
+        val.d = val.q + 4;   
     }
     
     if (inc == 5) { // reset combo count to 0

@@ -3,7 +3,7 @@ module multi_dec_ctr #(
   ) (
     input clk,                // clock
     input rst,                // reset
-    input inc[4],                // increment counter
+    input inc[5],                // increment counter
     output digits[DIGITS][4]  // digit values
   ) {
  

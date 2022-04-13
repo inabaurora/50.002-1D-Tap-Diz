@@ -17,7 +17,9 @@ module regfile (
     output column_1[16],
     output column_2[16],
     output column_3[16],
-    output column_4[16]
+    output column_4[16],
+    
+    output column_lunatic[16]
   ) {
   
   // all regfile registers used
@@ -36,7 +38,8 @@ module regfile (
       dff selected_col[16];
       dff selected_col_address[16];
       dff add_score[16];
-      dff reg_temp[3][16];
+      dff reg_temp[2][16];
+      dff col_lunatic[16];
     }
   }
   
@@ -60,7 +63,7 @@ module regfile (
           4hc: add_score.d = data;
           4hd: reg_temp.d[0] = data;
           4he: reg_temp.d[1] = data;
-          4hf: reg_temp.d[2] = data;
+          4hf: col_lunatic.d = data;
        }    
     }
     
@@ -81,7 +84,7 @@ module regfile (
           4hc: out_a = add_score.q;
           4hd: out_a = reg_temp.q[0];
           4he: out_a = reg_temp.q[1];
-          4hf: out_a = reg_temp.q[2];
+          4hf: out_a = col_lunatic.q;
           
           default: out_a = 0;
     }
@@ -102,7 +105,7 @@ module regfile (
           4hc: out_b = add_score.q;
           4hd: out_b = reg_temp.q[0];
           4he: out_b = reg_temp.q[1];
-          4hf: out_b = reg_temp.q[2];
+          4hf: out_b = col_lunatic.q;
           
           default: out_b = 0;
     }
@@ -112,6 +115,6 @@ module regfile (
     column_2 = col1.q;
     column_3 = col2.q;
     column_4 = col3.q;
-   
+    column_lunatic = col_lunatic.q;
   }
 }

@@ -1,0 +1,20 @@
+module lunatic_ROM (
+  // receives input based on the alufn_signal provided
+  // read const from right to left based on increasing binary number
+  	input address[2], 
+  
+  // output represents which LEDs light up on the IO board
+  // b0001: col0
+  // b0010: col1
+  // b0100: col2
+  // b1000: col3
+
+  	output value[4] 
+  ) 
+{
+  const LUNATIC_ROM = {b1000, b0100, b0010, b0001};
+  
+  always {
+	      value = LUNATIC_ROM[address];
+  }
+}

@@ -2,54 +2,67 @@ module betacpu (
     input clk,  // clock
     input rst,  // reset
     
-    input button[4],
+    input start_lunatic_button,
+    input rst_button,
+    input gameplay_button[4],
+    input shifter_button[2],
     
     output column_1[16],
     output column_2[16],
     output column_3[16],
     output column_4[16],
     
-    output comboinc[4],
-    output scoreinc[4]
+    output column_lunatic[16],
+    
+    output comboinc[5],
+    output scoreinc[5]
   ) {
   
   // temporary variables
   sig inputALU_a[16];
   sig inputALU_b[16];
+  sig lunatic_valid[4];
   
   alu game_alu;
+  
+  lunatic_ROM lunaticrom;
   
   .clk(clk){
     edge_detector clock_detector(#RISE(1), #FALL(0));
     .rst(rst){
-      counter slow_timer_0(#SIZE(1),#DIV(27)); //1 block/s
-      counter slow_timer_1(#SIZE(1),#DIV(26)); //2 block/s
+      counter slow_timer_0(#SIZE(1),#DIV(26)); //1 block/s
+      counter slow_timer_1(#SIZE(1),#DIV(25)); //2 block/s
       counter slow_timer_2(#SIZE(1),#DIV(24)); //4 block/s
+      counter slow_timer_3(#SIZE(1),#DIV(23)); //8 block/s
       
       controlunit game_cu;
       regfile game_reg;
       
-      random_row randgen;
+      random_row randgen_add;
+      random_row randgen_lunatic;
     }
   }
   
   always {
-    //increase slow_clock each time
     clock_detector.in = 0;
     game_cu.slow_clock_in = 0;
     
-    if (game_cu.set_speed == 1) { //DIFFICULTY = EASY
+    if (game_cu.set_speed == 0) { //DIFFICULTY = EASY
         clock_detector.in = slow_timer_0.value;
         game_cu.slow_clock_in = clock_detector.out;
-      }
-    else if (game_cu.set_speed == 2) { //DIFFICULTY = NORMAL
+    }
+    else if (game_cu.set_speed == 1) { //DIFFICULTY = NORMAL
         clock_detector.in = slow_timer_1.value;
         game_cu.slow_clock_in = clock_detector.out;
-      }
-    else if (game_cu.set_speed == 3) { //DIFFICULTY = HARD
+    }
+    else if (game_cu.set_speed == 2) { //DIFFICULTY = HARD
         clock_detector.in = slow_timer_2.value;
         game_cu.slow_clock_in = clock_detector.out;
-      }
+    }
+    else if (game_cu.set_speed == 3) { //DIFFICULTY = HARD
+        clock_detector.in = slow_timer_3.value;
+        game_cu.slow_clock_in = clock_detector.out;
+    }
     
     // light arrays to be displayed for the game
     column_1 = game_reg.column_1;
@@ -57,16 +70,30 @@ module betacpu (
     column_3 = game_reg.column_3;
     column_4 = game_reg.column_4;
     
+    // check for lunatic row if its valid 
+    lunaticrom.address = game_reg.column_lunatic[1:0];
+    if (game_cu.lunatic_check == 0){
+      lunatic_valid = 4b0000;
+    }
+    else {
+      lunatic_valid = lunaticrom.value;
+    }
+    column_lunatic = lunatic_valid;
+    
     // combo inc to be displayed for the game
-    comboinc = game_cu.combo_inc[3:0];
+    comboinc = game_cu.combo_inc[4:0];
     // score inc to be displayed for the game
-    scoreinc = game_cu.score_inc[3:0];
+    scoreinc = game_cu.score_inc[4:0];
     
     // button input for changing states in the control unit
-    game_cu.button = button;
+    game_cu.start_lunatic_button = start_lunatic_button;
+    game_cu.rst_button = rst_button;
+    game_cu.gameplay_button = gameplay_button;
+    game_cu.shifter_button = shifter_button;
     
     // random generation of column to add new note into
-    game_cu.randgen = randgen.out;
+    game_cu.randgen_add = randgen_add.out;
+    game_cu.randgen_lunatic = randgen_lunatic.out;
     
     // send signals from the control unit to retrieve data from the regfile
     game_reg.we = game_cu.we;
@@ -82,19 +109,24 @@ module betacpu (
       b00: inputALU_a = game_reg.out_a;
       b01: inputALU_a = 16h2;
       b10: inputALU_a = 16h3;
+      b11: inputALU_a = 16h1;
       default: inputALU_a = 0;
     }
     
     // bsel signal output
     case(game_cu.bsel){
-      b000: inputALU_b = game_reg.out_b;
-      b001: inputALU_b = 16hBF;
-      b010: inputALU_b = 16hDF;
-      b011: inputALU_b = 16hEF;
-      b100: inputALU_b = 16h1;
-      b101: inputALU_b = 16h80;
-      b110: inputALU_b = 16h2;
-      b111: inputALU_b = 16h4;
+      b0000: inputALU_b = game_reg.out_b;
+      b0001: inputALU_b = 16hBF;
+      b0010: inputALU_b = 16hDF;
+      b0011: inputALU_b = 16hEF;
+      b0100: inputALU_b = 16h1;
+      b0101: inputALU_b = 16h80;
+      b0110: inputALU_b = 16h2;
+      b0111: inputALU_b = 16h4;
+      b1000: inputALU_b = 16h5;
+      b1001: inputALU_b = 16hA;
+      b1010: inputALU_b = 16h14;
+      b1011: inputALU_b = 16hFF;
       default: inputALU_b = 0;
     }
     

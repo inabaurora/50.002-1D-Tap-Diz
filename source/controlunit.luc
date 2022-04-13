@@ -2,9 +2,14 @@ module controlunit (
     input clk,  // clock
     input rst,  // reset
     
-    input button[4],
+    input start_lunatic_button,
+    input rst_button,
+    input gameplay_button[4],
+    input shifter_button[2],
+    
     input rb_fromreg[16],
-    input randgen[2],
+    input randgen_add[2],
+    input randgen_lunatic[2],
     input slow_clock_in,
     
     //signals
@@ -13,20 +18,25 @@ module controlunit (
     output rb[4],
     output rc[4],
     output asel[2],
-    output bsel[3],
+    output bsel[4],
     output we,
     output wdsel[2],
     
     output set_speed[2],
     output combo_inc[16],
-    output score_inc[16]
+    output score_inc[16],
+    
+    output lunatic_check
   ) {
   
   .clk(clk){
 
     .rst(rst){
+      // registers to pass temporary values in CU
       dff difficulty[2];
       dff rand_store[2];
+      dff lunatic;
+      dff rand_store_lunatic[2];
       
       fsm gameFSM = {
       // difficulty set
@@ -35,11 +45,34 @@ module controlunit (
       DIFFICULTY_EASY,
       DIFFICULTY_NORMAL,
       DIFFICULTY_HARD,
+      DIFFICULTY_INSANE,
+      SPECIAL_GAMEMODE,
+      GAMEMODE_LUNATIC,
+      BRANCH_INITIALIZE_LUNATIC,
+      INITIALIZE_LUNATIC_0,
+      INITIALIZE_LUNATIC_1,
+      INITIALIZE_LUNATIC_2,
+      INITIALIZE_LUNATIC_3,
       SET_COUNT,
       INC_COUNT,
       GAME_IDLE,
       
       // constant ongoing adjustment of LEDs
+      BRANCH_CHECK_LUNATIC,
+      ADD_LUNATIC_NOTE,
+      BRANCH_CHECK_LUNATIC_DIFFICULTY,
+      EASY_LUNATIC_COUNT,
+      MEDIUM_LUNATIC_COUNT,
+      HARD_LUNATIC_COUNT,
+      INSANE_LUNATIC_COUNT,
+      BRANCH_RESET_COUNT,
+      STORE_RAND_LUNATIC,
+      BRANCH_CHANGE_LUNATIC,
+      UPDATE_LUNATIC_COL0,
+      UPDATE_LUNATIC_COL1,
+      UPDATE_LUNATIC_COL2,
+      UPDATE_LUNATIC_COL3,
+      RESET_COUNT,
       SHL_COL0,
       SHL_COL1,
       SHL_COL2,
@@ -59,12 +92,19 @@ module controlunit (
       CLEAR_1,
       CLEAR_2,
       CLEAR_3,
+      MASK_TOP_8,
       CHECK_CLEAR,
       BRANCH_CLEAR,
+      ENDING_LUNATIC_COUNT,
       DISPLAY_SCORE,
+      RESET_COL0,
+      RESET_COL1,
+      RESET_COL2,
+      RESET_COL3,
+      RESET_LUNATIC_COUNT,
       GAME_OVER,
         
-      // upon button press
+      // gameplay segment
       PUSH_COL0,
       PUSH_COL1,
       PUSH_COL2,
@@ -80,6 +120,10 @@ module controlunit (
       MULTIPLIER_1_PERFECT,
       MULTIPLIER_2_PERFECT,
       MULTIPLIER_4_PERFECT,
+      BRANCH_LUNATIC_PERFECT,
+      CHECK_LUNATIC_ROW_PERFECT,
+      BRANCH_CHECK_LUNATIC_ROW_PERFECT,
+      MULITPLIER_LUNATIC_PERFECT,
       ADD_PERFECT,
       RECORD_PERFECT,
       CLEAR_PERFECT,
@@ -88,6 +132,10 @@ module controlunit (
       MULTIPLIER_1_GOOD,
       MULTIPLIER_2_GOOD,
       MULTIPLIER_4_GOOD,
+      BRANCH_LUNATIC_GOOD,
+      CHECK_LUNATIC_ROW_GOOD,
+      BRANCH_CHECK_LUNATIC_ROW_GOOD,
+      MULITPLIER_LUNATIC_GOOD,
       ADD_GOOD,
       RECORD_GOOD,
       CLEAR_GOOD,
@@ -98,7 +146,21 @@ module controlunit (
       UPDATE_COL0,
       UPDATE_COL1,
       UPDATE_COL2,
-      UPDATE_COL3
+      UPDATE_COL3,
+        
+      //column shifting segment (lunatic)
+      LEFT_SHIFTER_CHECK_LUNATIC,
+      TEMP_STORE_COL0,
+      LEFT_COL0,
+      LEFT_COL1,
+      LEFT_COL2,
+      LEFT_COL3,
+      RIGHT_SHIFTER_CHECK_LUNATIC,
+      TEMP_STORE_COL3,
+      RIGHT_COL3,
+      RIGHT_COL2,
+      RIGHT_COL1,
+      RIGHT_COL0
       };
     }
   } 
@@ -133,9 +195,11 @@ module controlunit (
     combo_inc = 0;
     score_inc = 0;
     
+    lunatic_check = lunatic.q;
+    
     case (gameFSM.q){
       gameFSM.GAME_START:
-        if (button[0]) {
+        if (start_lunatic_button) {
           gameFSM.d = gameFSM.WAIT_DIFFICULTY;
         }
         else {
@@ -143,46 +207,128 @@ module controlunit (
         }
       
       gameFSM.WAIT_DIFFICULTY:
-        if (button[1]) {
+        if (gameplay_button[0]) {
           gameFSM.d = gameFSM.DIFFICULTY_EASY;
         }
-        else if (button[2]) {
+        else if (gameplay_button[1]) {
           gameFSM.d = gameFSM.DIFFICULTY_NORMAL;
         }
-        else if (button[3]) {
+        else if (gameplay_button[2]) {
           gameFSM.d = gameFSM.DIFFICULTY_HARD;
+        }
+        else if (gameplay_button[3]) {
+          gameFSM.d = gameFSM.DIFFICULTY_INSANE;
+        }
+        else if (rst_button) {
+          gameFSM.d = gameFSM.GAME_OVER;
         }
         else {
           gameFSM.d = gameFSM.WAIT_DIFFICULTY;
         }
       
       gameFSM.DIFFICULTY_EASY:
-        difficulty.d = 1;
+        difficulty.d = 0;
         
         rc = 4h8;
         we = 1;
         wdsel = 2b01;
         
-        gameFSM.d = gameFSM.SET_COUNT;
+        gameFSM.d = gameFSM.SPECIAL_GAMEMODE;
       
       gameFSM.DIFFICULTY_NORMAL:
-        difficulty.d = 2;
+        difficulty.d = 1;
         
         rc = 4h8;
         we = 1;
         wdsel = 2b10;
         
-        gameFSM.d = gameFSM.SET_COUNT;
+        gameFSM.d = gameFSM.SPECIAL_GAMEMODE;
         
       gameFSM.DIFFICULTY_HARD:
+        difficulty.d = 2;
+        
+        rc = 4h8;
+        we = 1;
+        wdsel = 2b11;
+        
+        gameFSM.d = gameFSM.SPECIAL_GAMEMODE;
+      
+      gameFSM.DIFFICULTY_INSANE:
         difficulty.d = 3;
         
         rc = 4h8;
         we = 1;
         wdsel = 2b11;
         
+        gameFSM.d = gameFSM.SPECIAL_GAMEMODE;
+          
+      gameFSM.SPECIAL_GAMEMODE:
+        if (start_lunatic_button) {
+          gameFSM.d = gameFSM.GAMEMODE_LUNATIC;
+        }
+        else if (gameplay_button[0]) {
+          gameFSM.d = gameFSM.SET_COUNT;
+        }
+        else if (rst_button) {
+          gameFSM.d = gameFSM.GAME_OVER;
+        }  
+        else {
+          gameFSM.d = gameFSM.SPECIAL_GAMEMODE;
+        }
+        
+      gameFSM.GAMEMODE_LUNATIC:
+        lunatic.d = 1;
+        rand_store_lunatic.d = randgen_lunatic;
+        
+        gameFSM.d = gameFSM.BRANCH_INITIALIZE_LUNATIC;
+        
+      gameFSM.BRANCH_INITIALIZE_LUNATIC:
+        if (rand_store_lunatic.q == 2b00) {
+          gameFSM.d = gameFSM.INITIALIZE_LUNATIC_0;
+        }
+        else if (rand_store_lunatic.q == 2b01) {
+          gameFSM.d = gameFSM.INITIALIZE_LUNATIC_1;
+        }
+        else if (rand_store_lunatic.q == 2b10) {
+          gameFSM.d = gameFSM.INITIALIZE_LUNATIC_2;
+        }
+        else if (rand_store_lunatic.q == 2b11) {
+          gameFSM.d = gameFSM.INITIALIZE_LUNATIC_3;
+        }
+        
+      gameFSM.INITIALIZE_LUNATIC_0:
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4hf;
+        asel = 2b00;
+        we = 1;
+        
         gameFSM.d = gameFSM.SET_COUNT;
-   
+        
+      gameFSM.INITIALIZE_LUNATIC_1:
+        alufn = ALDR;
+        rc = 4hf;
+        asel = 2b11;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SET_COUNT;
+        
+      gameFSM.INITIALIZE_LUNATIC_2:
+        alufn = ALDR;
+        rc = 4hf;
+        asel = 2b01;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SET_COUNT;
+        
+      gameFSM.INITIALIZE_LUNATIC_3:
+        alufn = ALDR;
+        rc = 4hf;
+        asel = 2b10;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SET_COUNT;
+
       gameFSM.SET_COUNT:
         ra = 4h4;
         rc = 4h7;
@@ -196,36 +342,190 @@ module controlunit (
         ra = 4h7;
         rc = 4h7;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         gameFSM.d = gameFSM.GAME_IDLE;
         
       gameFSM.GAME_IDLE:
-        if (button[0]) {
+        if (gameplay_button[0]) {
           gameFSM.d = gameFSM.PUSH_COL0;
         }
-        if (button[1]) {
+        if (gameplay_button[1]) {
           gameFSM.d = gameFSM.PUSH_COL1;
         }
-        if (button[2]) {
+        if (gameplay_button[2]) {
           gameFSM.d = gameFSM.PUSH_COL2;
         }
-        if (button[3]) {
+        if (gameplay_button[3]) {
           gameFSM.d = gameFSM.PUSH_COL3;
         }
         
+        if (shifter_button[0]) {
+          gameFSM.d = gameFSM.LEFT_SHIFTER_CHECK_LUNATIC;
+        }
+        if (shifter_button[1]) {
+          gameFSM.d = gameFSM.RIGHT_SHIFTER_CHECK_LUNATIC;
+        }
+        
+        if (rst_button) {
+          gameFSM.d = gameFSM.RESET_COL0;
+        }
+        
         if (slow_clock_in == b1) {
+          gameFSM.d = gameFSM.BRANCH_CHECK_LUNATIC;
+        }
+        
+      // perpetual component of the FSM
+      gameFSM.BRANCH_CHECK_LUNATIC:
+        if (lunatic.q == 1) {
+          gameFSM.d = gameFSM.ADD_LUNATIC_NOTE;
+        }
+        else {
           gameFSM.d = gameFSM.SHL_COL0;
         }
+        
+      gameFSM.ADD_LUNATIC_NOTE:
+        alufn = ADD;
+        ra = 4he;
+        rc = 4he;
+        asel = 2b00;
+        bsel = 4b0100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CHECK_LUNATIC_DIFFICULTY;
       
-      // perpetual component of the FSM
+      gameFSM.BRANCH_CHECK_LUNATIC_DIFFICULTY:
+        if (difficulty.q == 0) {
+          gameFSM.d = gameFSM.EASY_LUNATIC_COUNT;
+        }
+        else if (difficulty.q == 1) {
+          gameFSM.d = gameFSM.MEDIUM_LUNATIC_COUNT;
+        }
+        else if (difficulty.q == 2) {
+          gameFSM.d = gameFSM.HARD_LUNATIC_COUNT;
+        }
+        else if (difficulty.q == 3) {
+          gameFSM.d = gameFSM.INSANE_LUNATIC_COUNT;
+        }
+        
+      gameFSM.EASY_LUNATIC_COUNT:
+        alufn = CMPEQ;
+        ra = 4he;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 4b1000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_RESET_COUNT;
+        
+      gameFSM.MEDIUM_LUNATIC_COUNT:
+        alufn = CMPEQ;
+        ra = 4he;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 4b1001;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_RESET_COUNT;
+         
+      gameFSM.HARD_LUNATIC_COUNT:
+        alufn = CMPEQ;
+        ra = 4he;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 4b1010;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_RESET_COUNT;
+        
+      gameFSM.INSANE_LUNATIC_COUNT:
+        alufn = CMPEQ;
+        ra = 4he;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 4b1010;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_RESET_COUNT;
+        
+      gameFSM.BRANCH_RESET_COUNT:
+        rb = 4hd;
+        
+        if (rb_fromreg == 16h0) {
+          gameFSM.d = gameFSM.SHL_COL0;
+        }
+        else if (rb_fromreg == 16h1) {
+          gameFSM.d = gameFSM.STORE_RAND_LUNATIC;
+        }
+      
+      gameFSM.STORE_RAND_LUNATIC:
+        rand_store_lunatic.d = randgen_lunatic;
+        
+        gameFSM.d = gameFSM.BRANCH_CHANGE_LUNATIC;
+        
+      gameFSM.BRANCH_CHANGE_LUNATIC:
+        if (rand_store_lunatic.q == 2b00) {
+          gameFSM.d = gameFSM.UPDATE_LUNATIC_COL0;
+        }
+        else if (rand_store_lunatic.q == 2b01) {
+          gameFSM.d = gameFSM.UPDATE_LUNATIC_COL1;
+        }
+        else if (rand_store_lunatic.q == 2b10) {
+          gameFSM.d = gameFSM.UPDATE_LUNATIC_COL2;
+        }
+        else if (rand_store_lunatic.q == 2b11) {
+          gameFSM.d = gameFSM.UPDATE_LUNATIC_COL3;
+        }
+        
+      gameFSM.UPDATE_LUNATIC_COL0:
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4hf;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_COUNT;
+        
+      gameFSM.UPDATE_LUNATIC_COL1:
+        alufn = ALDR;
+        rc = 4hf;
+        asel = 2b11;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_COUNT;
+        
+      gameFSM.UPDATE_LUNATIC_COL2:
+        alufn = ALDR;
+        rc = 4hf;
+        asel = 2b01;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_COUNT;
+        
+      gameFSM.UPDATE_LUNATIC_COL3:
+        alufn = ALDR;
+        rc = 4hf;
+        asel = 2b10;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_COUNT;
+        
+      gameFSM.RESET_COUNT:
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4he;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.SHL_COL0;
+        
       gameFSM.SHL_COL0:
         alufn = SHL;
         ra = 4h0;
         rc = 4h0;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         gameFSM.d = gameFSM.SHL_COL1;
@@ -235,7 +535,7 @@ module controlunit (
         ra = 4h1;
         rc = 4h1;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         gameFSM.d = gameFSM.SHL_COL2;
@@ -245,7 +545,7 @@ module controlunit (
         ra = 4h2;
         rc = 4h2;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         gameFSM.d = gameFSM.SHL_COL3;
@@ -255,7 +555,7 @@ module controlunit (
         ra = 4h3;
         rc = 4h3;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         gameFSM.d = gameFSM.MISS_1;
@@ -266,7 +566,7 @@ module controlunit (
         rb = 4h1;
         rc = 4h9;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.MISS_2;
@@ -277,7 +577,7 @@ module controlunit (
         rb = 4h9;
         rc = 4h9;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.MISS_3;
@@ -288,7 +588,7 @@ module controlunit (
         rb = 4h9;
         rc = 4h9;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.MISS_MASK;
@@ -298,7 +598,7 @@ module controlunit (
         ra = 4h9;
         rc = 4h9;
         asel = 2b00;
-        bsel = 3b101;
+        bsel = 4b0101;
         we = 1;
         
         gameFSM.d = gameFSM.CHECK_MISS;
@@ -308,7 +608,7 @@ module controlunit (
         ra = 4h9;
         rc = 4h9;
         asel = 2b00;
-        bsel = 3b101;
+        bsel = 4b0101;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_CHECK_MISS;
@@ -340,7 +640,7 @@ module controlunit (
         rb = 4h8;
         rc = 4hd;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_COUNT;
@@ -357,7 +657,7 @@ module controlunit (
         }
       
       gameFSM.STORE_RAND:
-        rand_store.d = randgen;
+        rand_store.d = randgen_add;
         
         gameFSM.d = gameFSM.ADD_NOTE;  
           
@@ -366,7 +666,7 @@ module controlunit (
         ra = rand_store.q;
         rc = rand_store.q;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         gameFSM.d = gameFSM.INC_COUNT;
@@ -377,7 +677,7 @@ module controlunit (
         rb = 4h1;
         rc = 4hd;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.CLEAR_2;
@@ -388,7 +688,7 @@ module controlunit (
         rb = 4hd;
         rc = 4hd;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.CLEAR_3;
@@ -399,18 +699,28 @@ module controlunit (
         rb = 4hd;
         rc = 4hd;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.MASK_TOP_8;
+      
+      gameFSM.MASK_TOP_8:
+        alufn = AND;
+        ra = 4hd;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 4b1011;
         we = 1;
         
         gameFSM.d = gameFSM.CHECK_CLEAR;
-        
+          
       gameFSM.CHECK_CLEAR:
         alufn = CMPEQ;
         ra = 4hd;
         rb = 4h4;
         rc = 4hd;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_CLEAR;
@@ -423,17 +733,75 @@ module controlunit (
         }
         
         if (rb_fromreg == 16h1) {
-          gameFSM.d = gameFSM.DISPLAY_SCORE;
+          gameFSM.d = gameFSM.ENDING_LUNATIC_COUNT;
         }
-      
+        
+      gameFSM.ENDING_LUNATIC_COUNT:
+        lunatic.d = 0;
+        
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4he;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.DISPLAY_SCORE;
+        
       gameFSM.DISPLAY_SCORE:
-        if (button[0]) {
+        if (gameplay_button[0]) {
           gameFSM.d = gameFSM.GAME_OVER;
         }
         else {
           gameFSM.d = gameFSM.DISPLAY_SCORE;
         }
+        
+      gameFSM.RESET_COL0:
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4h0;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_COL1;
       
+      gameFSM.RESET_COL1:
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4h1;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_COL2;
+        
+      gameFSM.RESET_COL2:
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4h2;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_COL3;
+        
+      gameFSM.RESET_COL3:
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4h3;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_LUNATIC_COUNT;
+        
+      gameFSM.RESET_LUNATIC_COUNT:
+        lunatic.d = 0;
+        
+        alufn = ALDR;
+        ra = 4h4;
+        rc = 4he;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.GAME_OVER;
+        
       gameFSM.GAME_OVER:
         alufn = ALDR;
         ra = 4h4;
@@ -497,7 +865,7 @@ module controlunit (
         ra = 4h4;
         rc = 4hb;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_CHECK_INPUT;
@@ -539,7 +907,7 @@ module controlunit (
         ra = 4h5;
         rc = 4h5;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         combo_inc = 1;
@@ -549,10 +917,10 @@ module controlunit (
       gameFSM.BRANCH_SCORE_PERFECT:
         rb = 4h5;
         
-        if (rb_fromreg <= 25){
+        if (rb_fromreg <= 20){
           gameFSM.d = gameFSM.MULTIPLIER_1_PERFECT;
         }
-        else if (rb_fromreg <= 50){
+        else if (rb_fromreg <= 40){
           gameFSM.d = gameFSM.MULTIPLIER_2_PERFECT;
         }
         else {
@@ -563,25 +931,64 @@ module controlunit (
         alufn = MUL;
         rc = 4hc;
         asel = 2b10;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
-        gameFSM.d = gameFSM.ADD_PERFECT;
+        gameFSM.d = gameFSM.BRANCH_LUNATIC_PERFECT;
         
       gameFSM.MULTIPLIER_2_PERFECT:
         alufn = MUL;
         rc = 4hc;
         asel = 2b10;
-        bsel = 3b110;
+        bsel = 4b0110;
         we = 1;
         
-        gameFSM.d = gameFSM.ADD_PERFECT;
+        gameFSM.d = gameFSM.BRANCH_LUNATIC_PERFECT;
         
       gameFSM.MULTIPLIER_4_PERFECT:
         alufn = MUL;
         rc = 4hc;
         asel = 2b10;
-        bsel = 3b111;
+        bsel = 4b0111;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_LUNATIC_PERFECT;
+        
+      gameFSM.BRANCH_LUNATIC_PERFECT:
+        if (lunatic.q == 1) {
+          gameFSM.d = gameFSM.CHECK_LUNATIC_ROW_PERFECT;
+        }
+        else {
+          gameFSM.d = gameFSM.ADD_PERFECT;
+        }
+        
+      gameFSM.CHECK_LUNATIC_ROW_PERFECT:
+        alufn = CMPEQ;
+        ra = 4hb;
+        rb = 4hf;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 4b0000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CHECK_LUNATIC_ROW_PERFECT;
+        
+      gameFSM.BRANCH_CHECK_LUNATIC_ROW_PERFECT:
+        rb = 4hd;
+        
+        if (rb_fromreg == 0) {
+          gameFSM.d = gameFSM.ADD_PERFECT;
+        }
+        else if (rb_fromreg == 1) {
+          gameFSM.d = gameFSM.MULITPLIER_LUNATIC_PERFECT;
+        }
+        
+      gameFSM.MULITPLIER_LUNATIC_PERFECT:
+        alufn = MUL;
+        ra = 4hc;
+        rc = 4hc;
+        asel = 2b00;
+        bsel = 4b0110;
         we = 1;
         
         gameFSM.d = gameFSM.ADD_PERFECT;
@@ -592,7 +999,7 @@ module controlunit (
         rb = 4hc;
         rc = 4h6;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.RECORD_PERFECT;
@@ -609,7 +1016,7 @@ module controlunit (
         ra = 4ha;
         rc = 4ha;
         asel = 2b00;
-        bsel = 3b001;
+        bsel = 4b0001;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_UPDATE_COLUMN;
@@ -619,7 +1026,7 @@ module controlunit (
         ra = 4h5;
         rc = 4h5;
         asel = 2b00;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
         combo_inc = 1;
@@ -629,10 +1036,10 @@ module controlunit (
       gameFSM.BRANCH_SCORE_GOOD:
         rb = 4h5;
         
-        if (rb_fromreg <= 25){
+        if (rb_fromreg <= 20){
           gameFSM.d = gameFSM.MULTIPLIER_1_GOOD;
         }
-        else if (rb_fromreg <= 50){
+        else if (rb_fromreg <= 40){
           gameFSM.d = gameFSM.MULTIPLIER_2_GOOD;
         }
         else {
@@ -643,25 +1050,64 @@ module controlunit (
         alufn = MUL;
         rc = 4hc;
         asel = 2b01;
-        bsel = 3b100;
+        bsel = 4b0100;
         we = 1;
         
-        gameFSM.d = gameFSM.ADD_GOOD;
+        gameFSM.d = gameFSM.BRANCH_LUNATIC_GOOD;
         
       gameFSM.MULTIPLIER_2_GOOD:
         alufn = MUL;
         rc = 4hc;
         asel = 2b01;
-        bsel = 3b110;
+        bsel = 4b0110;
         we = 1;
         
-        gameFSM.d = gameFSM.ADD_GOOD;
+        gameFSM.d = gameFSM.BRANCH_LUNATIC_GOOD;
         
       gameFSM.MULTIPLIER_4_GOOD:
         alufn = MUL;
         rc = 4hc;
         asel = 2b01;
-        bsel = 3b111;
+        bsel = 4b0111;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_LUNATIC_GOOD;
+        
+      gameFSM.BRANCH_LUNATIC_GOOD:
+        if (lunatic.q == 1) {
+          gameFSM.d = gameFSM.CHECK_LUNATIC_ROW_GOOD;
+        }
+        else {
+          gameFSM.d = gameFSM.ADD_GOOD;
+        }
+        
+      gameFSM.CHECK_LUNATIC_ROW_GOOD:
+        alufn = CMPEQ;
+        ra = 4hb;
+        rb = 4hf;
+        rc = 4hd;
+        asel = 2b00;
+        bsel = 4b0000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_CHECK_LUNATIC_ROW_GOOD;
+        
+      gameFSM.BRANCH_CHECK_LUNATIC_ROW_GOOD:
+        rb = 4hd;
+        
+        if (rb_fromreg == 0) {
+          gameFSM.d = gameFSM.ADD_GOOD;
+        }
+        else if (rb_fromreg == 1) {
+          gameFSM.d = gameFSM.MULITPLIER_LUNATIC_GOOD;
+        }
+        
+      gameFSM.MULITPLIER_LUNATIC_GOOD:
+        alufn = MUL;
+        ra = 4hc;
+        rc = 4hc;
+        asel = 2b00;
+        bsel = 4b0110;
         we = 1;
         
         gameFSM.d = gameFSM.ADD_GOOD;
@@ -672,7 +1118,7 @@ module controlunit (
         rb = 4hc;
         rc = 4h6;
         asel = 2b00;
-        bsel = 3b000;
+        bsel = 4b0000;
         we = 1;
         
         gameFSM.d = gameFSM.RECORD_GOOD;
@@ -689,7 +1135,7 @@ module controlunit (
         ra = 4ha;
         rc = 4ha;
         asel = 2b00;
-        bsel = 3b010;
+        bsel = 4b0010;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_UPDATE_COLUMN;
@@ -710,7 +1156,7 @@ module controlunit (
         ra = 4ha;
         rc = 4ha;
         asel = 2b00;
-        bsel = 3b011;
+        bsel = 4b0011;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_UPDATE_COLUMN;
@@ -762,6 +1208,112 @@ module controlunit (
         alufn = ALDR;
         ra = 4ha;
         rc = 4h3;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.GAME_IDLE;
+        
+      gameFSM.LEFT_SHIFTER_CHECK_LUNATIC:
+        if (lunatic.q == 1) {
+          gameFSM.d = gameFSM.TEMP_STORE_COL0;
+        }
+        else {
+          gameFSM.d = gameFSM.GAME_IDLE;
+        }
+        
+      gameFSM.TEMP_STORE_COL0:
+        alufn = ALDR;
+        ra = 4h0;
+        rc = 4ha;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.LEFT_COL0;
+        
+      gameFSM.LEFT_COL0:
+        alufn = ALDR;
+        ra = 4h1;
+        rc = 4h0;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.LEFT_COL1;
+        
+      gameFSM.LEFT_COL1:
+        alufn = ALDR;
+        ra = 4h2;
+        rc = 4h1;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.LEFT_COL2;
+        
+      gameFSM.LEFT_COL2:
+        alufn = ALDR;
+        ra = 4h3;
+        rc = 4h2;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.LEFT_COL3;
+        
+      gameFSM.LEFT_COL3:
+        alufn = ALDR;
+        ra = 4ha;
+        rc = 4h3;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.GAME_IDLE;
+        
+      gameFSM.RIGHT_SHIFTER_CHECK_LUNATIC:
+        if (lunatic.q == 1) {
+          gameFSM.d = gameFSM.TEMP_STORE_COL3;
+        }
+        else {
+          gameFSM.d = gameFSM.GAME_IDLE;
+        }
+        
+      gameFSM.TEMP_STORE_COL3:
+        alufn = ALDR;
+        ra = 4h3;
+        rc = 4ha;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RIGHT_COL3;
+      
+      gameFSM.RIGHT_COL3:
+        alufn = ALDR;
+        ra = 4h2;
+        rc = 4h3;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RIGHT_COL2;
+        
+      gameFSM.RIGHT_COL2:
+        alufn = ALDR;
+        ra = 4h1;
+        rc = 4h2;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RIGHT_COL1;
+        
+      gameFSM.RIGHT_COL1:
+        alufn = ALDR;
+        ra = 4h0;
+        rc = 4h1;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RIGHT_COL0;
+        
+      gameFSM.RIGHT_COL0:
+        alufn = ALDR;
+        ra = 4ha;
+        rc = 4h0;
         asel = 2b00;
         we = 1;
         
