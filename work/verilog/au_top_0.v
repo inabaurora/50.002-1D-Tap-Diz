@@ -10,11 +10,15 @@ module au_top_0 (
     output reg [7:0] led,
     input usb_rx,
     output reg usb_tx,
-    input [3:0] gameplay_buttons,
+    input start_lunatic_button,
+    input rst_button,
+    input [3:0] gameplay_button,
+    input [1:0] shifter_button,
     output reg [6:0] lane_1_LED,
     output reg [6:0] lane_2_LED,
     output reg [6:0] lane_3_LED,
     output reg [6:0] lane_4_LED,
+    output reg [3:0] lunatic_LED,
     output reg [6:0] combo_seg,
     output reg [3:0] combo_sel,
     output reg [6:0] score_seg,
@@ -32,29 +36,83 @@ module au_top_0 (
     .in(M_reset_cond_in),
     .out(M_reset_cond_out)
   );
-  wire [(3'h4+0)-1:0] M_buttoncond_out;
-  reg [(3'h4+0)-1:0] M_buttoncond_in;
+  wire [1-1:0] M_start_lunatic_buttoncond_out;
+  reg [1-1:0] M_start_lunatic_buttoncond_in;
+  button_conditioner_2 start_lunatic_buttoncond (
+    .clk(clk),
+    .in(M_start_lunatic_buttoncond_in),
+    .out(M_start_lunatic_buttoncond_out)
+  );
+  wire [1-1:0] M_start_lunatic_buttondetector_out;
+  reg [1-1:0] M_start_lunatic_buttondetector_in;
+  edge_detector_3 start_lunatic_buttondetector (
+    .clk(clk),
+    .in(M_start_lunatic_buttondetector_in),
+    .out(M_start_lunatic_buttondetector_out)
+  );
+  wire [1-1:0] M_rst_buttoncond_out;
+  reg [1-1:0] M_rst_buttoncond_in;
+  button_conditioner_2 rst_buttoncond (
+    .clk(clk),
+    .in(M_rst_buttoncond_in),
+    .out(M_rst_buttoncond_out)
+  );
+  wire [1-1:0] M_rst_buttondetector_out;
+  reg [1-1:0] M_rst_buttondetector_in;
+  edge_detector_3 rst_buttondetector (
+    .clk(clk),
+    .in(M_rst_buttondetector_in),
+    .out(M_rst_buttondetector_out)
+  );
+  wire [(3'h4+0)-1:0] M_gameplay_buttoncond_out;
+  reg [(3'h4+0)-1:0] M_gameplay_buttoncond_in;
   
-  genvar GEN_buttoncond0;
+  genvar GEN_gameplay_buttoncond0;
   generate
-  for (GEN_buttoncond0=0;GEN_buttoncond0<3'h4;GEN_buttoncond0=GEN_buttoncond0+1) begin: buttoncond_gen_0
-    button_conditioner_2 buttoncond (
+  for (GEN_gameplay_buttoncond0=0;GEN_gameplay_buttoncond0<3'h4;GEN_gameplay_buttoncond0=GEN_gameplay_buttoncond0+1) begin: gameplay_buttoncond_gen_0
+    button_conditioner_2 gameplay_buttoncond (
       .clk(clk),
-      .in(M_buttoncond_in[GEN_buttoncond0*(1)+(1)-1-:(1)]),
-      .out(M_buttoncond_out[GEN_buttoncond0*(1)+(1)-1-:(1)])
+      .in(M_gameplay_buttoncond_in[GEN_gameplay_buttoncond0*(1)+(1)-1-:(1)]),
+      .out(M_gameplay_buttoncond_out[GEN_gameplay_buttoncond0*(1)+(1)-1-:(1)])
     );
   end
   endgenerate
-  wire [(3'h4+0)-1:0] M_buttondetector_out;
-  reg [(3'h4+0)-1:0] M_buttondetector_in;
+  wire [(3'h4+0)-1:0] M_gameplay_buttondetector_out;
+  reg [(3'h4+0)-1:0] M_gameplay_buttondetector_in;
   
-  genvar GEN_buttondetector0;
+  genvar GEN_gameplay_buttondetector0;
   generate
-  for (GEN_buttondetector0=0;GEN_buttondetector0<3'h4;GEN_buttondetector0=GEN_buttondetector0+1) begin: buttondetector_gen_0
-    edge_detector_3 buttondetector (
+  for (GEN_gameplay_buttondetector0=0;GEN_gameplay_buttondetector0<3'h4;GEN_gameplay_buttondetector0=GEN_gameplay_buttondetector0+1) begin: gameplay_buttondetector_gen_0
+    edge_detector_3 gameplay_buttondetector (
       .clk(clk),
-      .in(M_buttondetector_in[GEN_buttondetector0*(1)+(1)-1-:(1)]),
-      .out(M_buttondetector_out[GEN_buttondetector0*(1)+(1)-1-:(1)])
+      .in(M_gameplay_buttondetector_in[GEN_gameplay_buttondetector0*(1)+(1)-1-:(1)]),
+      .out(M_gameplay_buttondetector_out[GEN_gameplay_buttondetector0*(1)+(1)-1-:(1)])
+    );
+  end
+  endgenerate
+  wire [(2'h2+0)-1:0] M_shifter_buttoncond_out;
+  reg [(2'h2+0)-1:0] M_shifter_buttoncond_in;
+  
+  genvar GEN_shifter_buttoncond0;
+  generate
+  for (GEN_shifter_buttoncond0=0;GEN_shifter_buttoncond0<2'h2;GEN_shifter_buttoncond0=GEN_shifter_buttoncond0+1) begin: shifter_buttoncond_gen_0
+    button_conditioner_2 shifter_buttoncond (
+      .clk(clk),
+      .in(M_shifter_buttoncond_in[GEN_shifter_buttoncond0*(1)+(1)-1-:(1)]),
+      .out(M_shifter_buttoncond_out[GEN_shifter_buttoncond0*(1)+(1)-1-:(1)])
+    );
+  end
+  endgenerate
+  wire [(2'h2+0)-1:0] M_shifter_buttondetector_out;
+  reg [(2'h2+0)-1:0] M_shifter_buttondetector_in;
+  
+  genvar GEN_shifter_buttondetector0;
+  generate
+  for (GEN_shifter_buttondetector0=0;GEN_shifter_buttondetector0<2'h2;GEN_shifter_buttondetector0=GEN_shifter_buttondetector0+1) begin: shifter_buttondetector_gen_0
+    edge_detector_3 shifter_buttondetector (
+      .clk(clk),
+      .in(M_shifter_buttondetector_in[GEN_shifter_buttondetector0*(1)+(1)-1-:(1)]),
+      .out(M_shifter_buttondetector_out[GEN_shifter_buttondetector0*(1)+(1)-1-:(1)])
     );
   end
   endgenerate
@@ -79,7 +137,7 @@ module au_top_0 (
     .sel(M_seg_score_sel)
   );
   wire [16-1:0] M_combo_dec_ctr_digits;
-  reg [4-1:0] M_combo_dec_ctr_inc;
+  reg [5-1:0] M_combo_dec_ctr_inc;
   multi_dec_ctr_5 combo_dec_ctr (
     .clk(clk),
     .rst(rst),
@@ -87,7 +145,7 @@ module au_top_0 (
     .digits(M_combo_dec_ctr_digits)
   );
   wire [16-1:0] M_score_dec_ctr_digits;
-  reg [4-1:0] M_score_dec_ctr_inc;
+  reg [5-1:0] M_score_dec_ctr_inc;
   multi_dec_ctr_5 score_dec_ctr (
     .clk(clk),
     .rst(rst),
@@ -98,17 +156,25 @@ module au_top_0 (
   wire [16-1:0] M_game_beta_column_2;
   wire [16-1:0] M_game_beta_column_3;
   wire [16-1:0] M_game_beta_column_4;
-  wire [4-1:0] M_game_beta_comboinc;
-  wire [4-1:0] M_game_beta_scoreinc;
-  reg [4-1:0] M_game_beta_button;
+  wire [16-1:0] M_game_beta_column_lunatic;
+  wire [5-1:0] M_game_beta_comboinc;
+  wire [5-1:0] M_game_beta_scoreinc;
+  reg [1-1:0] M_game_beta_start_lunatic_button;
+  reg [1-1:0] M_game_beta_rst_button;
+  reg [4-1:0] M_game_beta_gameplay_button;
+  reg [2-1:0] M_game_beta_shifter_button;
   betacpu_6 game_beta (
     .clk(clk),
     .rst(rst),
-    .button(M_game_beta_button),
+    .start_lunatic_button(M_game_beta_start_lunatic_button),
+    .rst_button(M_game_beta_rst_button),
+    .gameplay_button(M_game_beta_gameplay_button),
+    .shifter_button(M_game_beta_shifter_button),
     .column_1(M_game_beta_column_1),
     .column_2(M_game_beta_column_2),
     .column_3(M_game_beta_column_3),
     .column_4(M_game_beta_column_4),
+    .column_lunatic(M_game_beta_column_lunatic),
     .comboinc(M_game_beta_comboinc),
     .scoreinc(M_game_beta_scoreinc)
   );
@@ -118,13 +184,23 @@ module au_top_0 (
     rst = M_reset_cond_out;
     led = 8'h00;
     usb_tx = usb_rx;
-    M_buttoncond_in = gameplay_buttons;
-    M_buttondetector_in = M_buttoncond_out;
-    M_game_beta_button = M_buttondetector_out;
+    M_start_lunatic_buttoncond_in = start_lunatic_button;
+    M_start_lunatic_buttondetector_in = M_start_lunatic_buttoncond_out;
+    M_rst_buttoncond_in = rst_button;
+    M_rst_buttondetector_in = M_rst_buttoncond_out;
+    M_gameplay_buttoncond_in = gameplay_button;
+    M_gameplay_buttondetector_in = M_gameplay_buttoncond_out;
+    M_shifter_buttoncond_in = shifter_button;
+    M_shifter_buttondetector_in = M_shifter_buttoncond_out;
+    M_game_beta_start_lunatic_button = M_start_lunatic_buttondetector_out;
+    M_game_beta_rst_button = M_rst_buttondetector_out;
+    M_game_beta_gameplay_button = M_gameplay_buttondetector_out;
+    M_game_beta_shifter_button = M_shifter_buttondetector_out;
     lane_1_LED = M_game_beta_column_1[0+6-:7];
     lane_2_LED = M_game_beta_column_2[0+6-:7];
     lane_3_LED = M_game_beta_column_3[0+6-:7];
     lane_4_LED = M_game_beta_column_4[0+6-:7];
+    lunatic_LED = M_game_beta_column_lunatic[0+3-:4];
     M_combo_dec_ctr_inc = M_game_beta_comboinc;
     M_score_dec_ctr_inc = M_game_beta_scoreinc;
     M_seg_combo_values = M_combo_dec_ctr_digits;

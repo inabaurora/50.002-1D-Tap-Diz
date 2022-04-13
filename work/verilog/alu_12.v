@@ -21,7 +21,7 @@ module alu_12 (
   reg [16-1:0] M_adderUnit_a;
   reg [16-1:0] M_adderUnit_b;
   reg [6-1:0] M_adderUnit_alufn_signal;
-  adder_19 adderUnit (
+  adder_21 adderUnit (
     .a(M_adderUnit_a),
     .b(M_adderUnit_b),
     .alufn_signal(M_adderUnit_alufn_signal),
@@ -36,7 +36,7 @@ module alu_12 (
   reg [1-1:0] M_compareUnit_v;
   reg [1-1:0] M_compareUnit_n;
   reg [6-1:0] M_compareUnit_alufn_signal;
-  compare_20 compareUnit (
+  compare_22 compareUnit (
     .z(M_compareUnit_z),
     .v(M_compareUnit_v),
     .n(M_compareUnit_n),
@@ -48,7 +48,7 @@ module alu_12 (
   reg [16-1:0] M_booleanUnit_a;
   reg [16-1:0] M_booleanUnit_b;
   reg [6-1:0] M_booleanUnit_alufn_signal;
-  boolean_21 booleanUnit (
+  boolean_23 booleanUnit (
     .a(M_booleanUnit_a),
     .b(M_booleanUnit_b),
     .alufn_signal(M_booleanUnit_alufn_signal),
@@ -59,7 +59,7 @@ module alu_12 (
   reg [16-1:0] M_shifterUnit_a;
   reg [5-1:0] M_shifterUnit_b;
   reg [6-1:0] M_shifterUnit_alufn_signal;
-  shifter_22 shifterUnit (
+  shifter_24 shifterUnit (
     .a(M_shifterUnit_a),
     .b(M_shifterUnit_b),
     .alufn_signal(M_shifterUnit_alufn_signal),

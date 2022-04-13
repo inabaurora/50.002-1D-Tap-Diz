@@ -7,8 +7,8 @@
 module decimal_counter_11 (
     input clk,
     input rst,
-    input [3:0] inc,
-    output reg [3:0] ovf,
+    input [4:0] inc,
+    output reg [4:0] ovf,
     output reg [3:0] value
   );
   
@@ -144,6 +144,54 @@ module decimal_counter_11 (
           M_val_d = 1'h0;
         end else begin
           M_val_d = M_val_q + 2'h2;
+        end
+      end
+    end
+    if (inc == 5'h10) begin
+      ovf = 1'h1 + (M_val_q >= 3'h4);
+      if (M_val_q == 4'h9) begin
+        M_val_d = 3'h5;
+      end else begin
+        if (M_val_q == 4'h8) begin
+          M_val_d = 3'h4;
+        end else begin
+          if (M_val_q == 3'h7) begin
+            M_val_d = 2'h3;
+          end else begin
+            if (M_val_q == 3'h6) begin
+              M_val_d = 2'h2;
+            end else begin
+              if (M_val_q == 3'h5) begin
+                M_val_d = 1'h1;
+              end else begin
+                if (M_val_q == 3'h4) begin
+                  M_val_d = 1'h0;
+                end else begin
+                  M_val_d = M_val_q + 3'h6;
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    if (inc == 5'h18) begin
+      ovf = 2'h2 + (M_val_q >= 3'h6);
+      if (M_val_q == 4'h9) begin
+        M_val_d = 2'h3;
+      end else begin
+        if (M_val_q == 4'h8) begin
+          M_val_d = 2'h2;
+        end else begin
+          if (M_val_q == 3'h7) begin
+            M_val_d = 1'h1;
+          end else begin
+            if (M_val_q == 3'h6) begin
+              M_val_d = 1'h0;
+            end else begin
+              M_val_d = M_val_q + 3'h4;
+            end
+          end
         end
       end
     end

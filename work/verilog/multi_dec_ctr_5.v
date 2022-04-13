@@ -11,16 +11,16 @@
 module multi_dec_ctr_5 (
     input clk,
     input rst,
-    input [3:0] inc,
+    input [4:0] inc,
     output reg [15:0] digits
   );
   
   localparam DIGITS = 3'h4;
   
   
-  wire [(3'h4+0)*4-1:0] M_dctr_ovf;
+  wire [(3'h4+0)*5-1:0] M_dctr_ovf;
   wire [(3'h4+0)*4-1:0] M_dctr_value;
-  reg [(3'h4+0)*4-1:0] M_dctr_inc;
+  reg [(3'h4+0)*5-1:0] M_dctr_inc;
   
   genvar GEN_dctr0;
   generate
@@ -28,16 +28,16 @@ module multi_dec_ctr_5 (
     decimal_counter_11 dctr (
       .clk(clk),
       .rst(rst),
-      .inc(M_dctr_inc[GEN_dctr0*(3'h4)+(3'h4)-1-:(3'h4)]),
-      .ovf(M_dctr_ovf[GEN_dctr0*(3'h4)+(3'h4)-1-:(3'h4)]),
+      .inc(M_dctr_inc[GEN_dctr0*(3'h5)+(3'h5)-1-:(3'h5)]),
+      .ovf(M_dctr_ovf[GEN_dctr0*(3'h5)+(3'h5)-1-:(3'h5)]),
       .value(M_dctr_value[GEN_dctr0*(3'h4)+(3'h4)-1-:(3'h4)])
     );
   end
   endgenerate
   
   always @* begin
-    M_dctr_inc[0+3-:4] = inc;
+    M_dctr_inc[0+4-:5] = inc;
     digits = M_dctr_value;
-    M_dctr_inc[4+11-:12] = M_dctr_ovf[0+11-:12];
+    M_dctr_inc[5+14-:15] = M_dctr_ovf[0+14-:15];
   end
 endmodule

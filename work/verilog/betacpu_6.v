@@ -7,13 +7,17 @@
 module betacpu_6 (
     input clk,
     input rst,
-    input [3:0] button,
+    input start_lunatic_button,
+    input rst_button,
+    input [3:0] gameplay_button,
+    input [1:0] shifter_button,
     output reg [15:0] column_1,
     output reg [15:0] column_2,
     output reg [15:0] column_3,
     output reg [15:0] column_4,
-    output reg [3:0] comboinc,
-    output reg [3:0] scoreinc
+    output reg [15:0] column_lunatic,
+    output reg [4:0] comboinc,
+    output reg [4:0] scoreinc
   );
   
   
@@ -21,6 +25,8 @@ module betacpu_6 (
   reg [15:0] inputALU_a;
   
   reg [15:0] inputALU_b;
+  
+  reg [3:0] lunatic_valid;
   
   wire [16-1:0] M_game_alu_c;
   wire [3-1:0] M_game_alu_zvn;
@@ -35,6 +41,13 @@ module betacpu_6 (
     .zvn(M_game_alu_zvn)
   );
   
+  wire [4-1:0] M_lunaticrom_value;
+  reg [2-1:0] M_lunaticrom_address;
+  lunatic_ROM_13 lunaticrom (
+    .address(M_lunaticrom_address),
+    .value(M_lunaticrom_value)
+  );
+  
   wire [1-1:0] M_clock_detector_out;
   reg [1-1:0] M_clock_detector_in;
   edge_detector_3 clock_detector (
@@ -43,44 +56,59 @@ module betacpu_6 (
     .out(M_clock_detector_out)
   );
   wire [1-1:0] M_slow_timer_0_value;
-  counter_13 slow_timer_0 (
+  counter_14 slow_timer_0 (
     .clk(clk),
     .rst(rst),
     .value(M_slow_timer_0_value)
   );
   wire [1-1:0] M_slow_timer_1_value;
-  counter_14 slow_timer_1 (
+  counter_15 slow_timer_1 (
     .clk(clk),
     .rst(rst),
     .value(M_slow_timer_1_value)
   );
   wire [1-1:0] M_slow_timer_2_value;
-  counter_15 slow_timer_2 (
+  counter_16 slow_timer_2 (
     .clk(clk),
     .rst(rst),
     .value(M_slow_timer_2_value)
+  );
+  wire [1-1:0] M_slow_timer_3_value;
+  counter_17 slow_timer_3 (
+    .clk(clk),
+    .rst(rst),
+    .value(M_slow_timer_3_value)
   );
   wire [6-1:0] M_game_cu_alufn;
   wire [4-1:0] M_game_cu_ra;
   wire [4-1:0] M_game_cu_rb;
   wire [4-1:0] M_game_cu_rc;
   wire [2-1:0] M_game_cu_asel;
-  wire [3-1:0] M_game_cu_bsel;
+  wire [4-1:0] M_game_cu_bsel;
   wire [1-1:0] M_game_cu_we;
   wire [2-1:0] M_game_cu_wdsel;
   wire [2-1:0] M_game_cu_set_speed;
   wire [16-1:0] M_game_cu_combo_inc;
   wire [16-1:0] M_game_cu_score_inc;
-  reg [4-1:0] M_game_cu_button;
+  wire [1-1:0] M_game_cu_lunatic_check;
+  reg [1-1:0] M_game_cu_start_lunatic_button;
+  reg [1-1:0] M_game_cu_rst_button;
+  reg [4-1:0] M_game_cu_gameplay_button;
+  reg [2-1:0] M_game_cu_shifter_button;
   reg [16-1:0] M_game_cu_rb_fromreg;
-  reg [2-1:0] M_game_cu_randgen;
+  reg [2-1:0] M_game_cu_randgen_add;
+  reg [2-1:0] M_game_cu_randgen_lunatic;
   reg [1-1:0] M_game_cu_slow_clock_in;
-  controlunit_16 game_cu (
+  controlunit_18 game_cu (
     .clk(clk),
     .rst(rst),
-    .button(M_game_cu_button),
+    .start_lunatic_button(M_game_cu_start_lunatic_button),
+    .rst_button(M_game_cu_rst_button),
+    .gameplay_button(M_game_cu_gameplay_button),
+    .shifter_button(M_game_cu_shifter_button),
     .rb_fromreg(M_game_cu_rb_fromreg),
-    .randgen(M_game_cu_randgen),
+    .randgen_add(M_game_cu_randgen_add),
+    .randgen_lunatic(M_game_cu_randgen_lunatic),
     .slow_clock_in(M_game_cu_slow_clock_in),
     .alufn(M_game_cu_alufn),
     .ra(M_game_cu_ra),
@@ -92,7 +120,8 @@ module betacpu_6 (
     .wdsel(M_game_cu_wdsel),
     .set_speed(M_game_cu_set_speed),
     .combo_inc(M_game_cu_combo_inc),
-    .score_inc(M_game_cu_score_inc)
+    .score_inc(M_game_cu_score_inc),
+    .lunatic_check(M_game_cu_lunatic_check)
   );
   wire [16-1:0] M_game_reg_out_a;
   wire [16-1:0] M_game_reg_out_b;
@@ -100,12 +129,13 @@ module betacpu_6 (
   wire [16-1:0] M_game_reg_column_2;
   wire [16-1:0] M_game_reg_column_3;
   wire [16-1:0] M_game_reg_column_4;
+  wire [16-1:0] M_game_reg_column_lunatic;
   reg [4-1:0] M_game_reg_ra;
   reg [4-1:0] M_game_reg_rb;
   reg [4-1:0] M_game_reg_rc;
   reg [1-1:0] M_game_reg_we;
   reg [16-1:0] M_game_reg_data;
-  regfile_17 game_reg (
+  regfile_19 game_reg (
     .clk(clk),
     .rst(rst),
     .ra(M_game_reg_ra),
@@ -118,29 +148,41 @@ module betacpu_6 (
     .column_1(M_game_reg_column_1),
     .column_2(M_game_reg_column_2),
     .column_3(M_game_reg_column_3),
-    .column_4(M_game_reg_column_4)
+    .column_4(M_game_reg_column_4),
+    .column_lunatic(M_game_reg_column_lunatic)
   );
-  wire [2-1:0] M_randgen_out;
-  random_row_18 randgen (
+  wire [2-1:0] M_randgen_add_out;
+  random_row_20 randgen_add (
     .clk(clk),
     .rst(rst),
-    .out(M_randgen_out)
+    .out(M_randgen_add_out)
+  );
+  wire [2-1:0] M_randgen_lunatic_out;
+  random_row_20 randgen_lunatic (
+    .clk(clk),
+    .rst(rst),
+    .out(M_randgen_lunatic_out)
   );
   
   always @* begin
     M_clock_detector_in = 1'h0;
     M_game_cu_slow_clock_in = 1'h0;
-    if (M_game_cu_set_speed == 1'h1) begin
+    if (M_game_cu_set_speed == 1'h0) begin
       M_clock_detector_in = M_slow_timer_0_value;
       M_game_cu_slow_clock_in = M_clock_detector_out;
     end else begin
-      if (M_game_cu_set_speed == 2'h2) begin
+      if (M_game_cu_set_speed == 1'h1) begin
         M_clock_detector_in = M_slow_timer_1_value;
         M_game_cu_slow_clock_in = M_clock_detector_out;
       end else begin
-        if (M_game_cu_set_speed == 2'h3) begin
+        if (M_game_cu_set_speed == 2'h2) begin
           M_clock_detector_in = M_slow_timer_2_value;
           M_game_cu_slow_clock_in = M_clock_detector_out;
+        end else begin
+          if (M_game_cu_set_speed == 2'h3) begin
+            M_clock_detector_in = M_slow_timer_3_value;
+            M_game_cu_slow_clock_in = M_clock_detector_out;
+          end
         end
       end
     end
@@ -148,10 +190,21 @@ module betacpu_6 (
     column_2 = M_game_reg_column_2;
     column_3 = M_game_reg_column_3;
     column_4 = M_game_reg_column_4;
-    comboinc = M_game_cu_combo_inc[0+3-:4];
-    scoreinc = M_game_cu_score_inc[0+3-:4];
-    M_game_cu_button = button;
-    M_game_cu_randgen = M_randgen_out;
+    M_lunaticrom_address = M_game_reg_column_lunatic[0+1-:2];
+    if (M_game_cu_lunatic_check == 1'h0) begin
+      lunatic_valid = 4'h0;
+    end else begin
+      lunatic_valid = M_lunaticrom_value;
+    end
+    column_lunatic = lunatic_valid;
+    comboinc = M_game_cu_combo_inc[0+4-:5];
+    scoreinc = M_game_cu_score_inc[0+4-:5];
+    M_game_cu_start_lunatic_button = start_lunatic_button;
+    M_game_cu_rst_button = rst_button;
+    M_game_cu_gameplay_button = gameplay_button;
+    M_game_cu_shifter_button = shifter_button;
+    M_game_cu_randgen_add = M_randgen_add_out;
+    M_game_cu_randgen_lunatic = M_randgen_lunatic_out;
     M_game_reg_we = M_game_cu_we;
     M_game_reg_ra = M_game_cu_ra;
     M_game_reg_rb = M_game_cu_rb;
@@ -168,35 +221,50 @@ module betacpu_6 (
       2'h2: begin
         inputALU_a = 16'h0003;
       end
+      2'h3: begin
+        inputALU_a = 16'h0001;
+      end
       default: begin
         inputALU_a = 1'h0;
       end
     endcase
     
     case (M_game_cu_bsel)
-      3'h0: begin
+      4'h0: begin
         inputALU_b = M_game_reg_out_b;
       end
-      3'h1: begin
+      4'h1: begin
         inputALU_b = 16'h00bf;
       end
-      3'h2: begin
+      4'h2: begin
         inputALU_b = 16'h00df;
       end
-      3'h3: begin
+      4'h3: begin
         inputALU_b = 16'h00ef;
       end
-      3'h4: begin
+      4'h4: begin
         inputALU_b = 16'h0001;
       end
-      3'h5: begin
+      4'h5: begin
         inputALU_b = 16'h0080;
       end
-      3'h6: begin
+      4'h6: begin
         inputALU_b = 16'h0002;
       end
-      3'h7: begin
+      4'h7: begin
         inputALU_b = 16'h0004;
+      end
+      4'h8: begin
+        inputALU_b = 16'h0005;
+      end
+      4'h9: begin
+        inputALU_b = 16'h000a;
+      end
+      4'ha: begin
+        inputALU_b = 16'h0014;
+      end
+      4'hb: begin
+        inputALU_b = 16'h00ff;
       end
       default: begin
         inputALU_b = 1'h0;
