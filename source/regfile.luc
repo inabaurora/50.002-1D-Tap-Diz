@@ -2,10 +2,10 @@ module regfile (
     input clk,  // clock
     input rst,  // reset
     
-    input ra[4], // a input
-    input rb[4], // b input 
+    input ra[5], // a input
+    input rb[5], // b input 
     
-    input rc[4], // write address
+    input rc[5], // write address
     input we, // write enable
     input data[16], // data sent out from ALU back to regfile
     
@@ -38,8 +38,11 @@ module regfile (
       dff selected_col[16];
       dff selected_col_address[16];
       dff add_score[16];
-      dff reg_temp[2][16];
+      dff reg_temp[3][16];
+      dff lunatic_count[16];
       dff col_lunatic[16];
+      dff high_score_normal[16];
+      dff high_score_lunatic[16];
     }
   }
   
@@ -48,65 +51,77 @@ module regfile (
     // write enable storage of data based on register called by rc
     if (we){
         case(rc){
-          4h0: col0.d = data;
-          4h1: col1.d = data;
-          4h2: col2.d = data;
-          4h3: col3.d = data;
-          4h4: blank.d = data;
-          4h5: combo.d = data;
-          4h6: score.d = data;
-          4h7: counter.d = data;
-          4h8: total_notes.d = data;
-          4h9: most_sigbits.d = data;
-          4ha: selected_col.d = data;
-          4hb: selected_col_address.d = data;
-          4hc: add_score.d = data;
-          4hd: reg_temp.d[0] = data;
-          4he: reg_temp.d[1] = data;
-          4hf: col_lunatic.d = data;
+          5h0: col0.d = data;
+          5h1: col1.d = data;
+          5h2: col2.d = data;
+          5h3: col3.d = data;
+          5h4: blank.d = data;
+          5h5: combo.d = data;
+          5h6: score.d = data;
+          5h7: counter.d = data;
+          5h8: total_notes.d = data;
+          5h9: most_sigbits.d = data;
+          5ha: selected_col.d = data;
+          5hb: selected_col_address.d = data;
+          5hc: add_score.d = data;
+          5hd: reg_temp.d[0] = data;
+          5he: lunatic_count.d = data;
+          5hf: col_lunatic.d = data;
+          5h10: high_score_normal.d = data;
+          5h11: high_score_lunatic.d = data;
+          5h12: reg_temp.d[1] = data;
+          5h13: reg_temp.d[2] = data;
        }    
     }
     
     // retrieves data based on registers called by ra and rb for the betacpu
     case(ra){
-          4h0: out_a = col0.q;
-          4h1: out_a = col1.q;
-          4h2: out_a = col2.q;
-          4h3: out_a = col3.q;
-          4h4: out_a = blank.q;
-          4h5: out_a = combo.q;
-          4h6: out_a = score.q;
-          4h7: out_a = counter.q;
-          4h8: out_a = total_notes.q;
-          4h9: out_a = most_sigbits.q;
-          4ha: out_a = selected_col.q;
-          4hb: out_a = selected_col_address.q;
-          4hc: out_a = add_score.q;
-          4hd: out_a = reg_temp.q[0];
-          4he: out_a = reg_temp.q[1];
-          4hf: out_a = col_lunatic.q;
+          5h0: out_a = col0.q;
+          5h1: out_a = col1.q;
+          5h2: out_a = col2.q;
+          5h3: out_a = col3.q;
+          5h4: out_a = blank.q;
+          5h5: out_a = combo.q;
+          5h6: out_a = score.q;
+          5h7: out_a = counter.q;
+          5h8: out_a = total_notes.q;
+          5h9: out_a = most_sigbits.q;
+          5ha: out_a = selected_col.q;
+          5hb: out_a = selected_col_address.q;
+          5hc: out_a = add_score.q;
+          5hd: out_a = reg_temp.q[0];
+          5he: out_a = lunatic_count.q;
+          5hf: out_a = col_lunatic.q;
+          5h10: out_a = high_score_normal.q;
+          5h11: out_a = high_score_lunatic.q;
+          5h12: out_a = reg_temp.q[1]; 
+          5h13: out_a = reg_temp.q[2];
           
           default: out_a = 0;
     }
         
     case(rb){
-          4h0: out_b = col0.q;
-          4h1: out_b = col1.q;
-          4h2: out_b = col2.q;
-          4h3: out_b = col3.q;
-          4h4: out_b = blank.q;
-          4h5: out_b = combo.q;
-          4h6: out_b = score.q;
-          4h7: out_b = counter.q;
-          4h8: out_b = total_notes.q;
-          4h9: out_b = most_sigbits.q;
-          4ha: out_b = selected_col.q;
-          4hb: out_b = selected_col_address.q;
-          4hc: out_b = add_score.q;
-          4hd: out_b = reg_temp.q[0];
-          4he: out_b = reg_temp.q[1];
-          4hf: out_b = col_lunatic.q;
-          
+          5h0: out_b = col0.q;
+          5h1: out_b = col1.q;
+          5h2: out_b = col2.q;
+          5h3: out_b = col3.q;
+          5h4: out_b = blank.q;
+          5h5: out_b = combo.q;
+          5h6: out_b = score.q;
+          5h7: out_b = counter.q;
+          5h8: out_b = total_notes.q;
+          5h9: out_b = most_sigbits.q;
+          5ha: out_b = selected_col.q;
+          5hb: out_b = selected_col_address.q;
+          5hc: out_b = add_score.q;
+          5hd: out_b = reg_temp.q[0];
+          5he: out_b = lunatic_count.q;
+          5hf: out_b = col_lunatic.q;
+          5h10: out_b = high_score_normal.q;
+          5h11: out_b = high_score_lunatic.q; 
+          5h12: out_b = reg_temp.q[1]; 
+          5h13: out_b = reg_temp.q[2];
+        
           default: out_b = 0;
     }
     

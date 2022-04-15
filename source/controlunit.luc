@@ -14,9 +14,9 @@ module controlunit (
     
     //signals
     output alufn[6],
-    output ra[4],
-    output rb[4],
-    output rc[4],
+    output ra[5],
+    output rb[5],
+    output rc[5],
     output asel[2],
     output bsel[4],
     output we,
@@ -53,7 +53,6 @@ module controlunit (
       INITIALIZE_LUNATIC_1,
       INITIALIZE_LUNATIC_2,
       INITIALIZE_LUNATIC_3,
-      SET_COUNT,
       INC_COUNT,
       GAME_IDLE,
       
@@ -95,13 +94,33 @@ module controlunit (
       MASK_TOP_8,
       CHECK_CLEAR,
       BRANCH_CLEAR,
+      BRANCH_SET_HIGHSCORE,
+      CHECK_SET_HIGHSCORE_NORMAL,
+      BRANCH_HIGHSCORE_NORMAL,
+      SET_HIGHSCORE_NORMAL,
+      CHECK_SET_HIGHSCORE_LUNATIC,
+      BRANCH_HIGHSCORE_LUNATIC,
+      SET_HIGHSCORE_LUNATIC,
       ENDING_LUNATIC_COUNT,
-      DISPLAY_SCORE,
+      DISPLAY_SCORE_NORMAL,
+      RESET_SCORE_SEL_NORMAL,
+      ADD_MAX_SCORE_NORMAL,
+      CHECK_MAX_SCORE_NORMAL,
+      BRANCH_MAX_SCORE_NORMAL,
+      DISPLAY_SCORE_LUNATIC,
+      RESET_SCORE_SEL_LUNATIC,
+      ADD_MAX_SCORE_LUNATIC,
+      CHECK_MAX_SCORE_LUNATIC,
+      BRANCH_MAX_SCORE_LUNATIC,
+      RESET_TEMP_SCORE,
+      END_GAME,
       RESET_COL0,
       RESET_COL1,
       RESET_COL2,
       RESET_COL3,
       RESET_LUNATIC_COUNT,
+      RESET_COMBO,
+      RESET_SCORE,
       GAME_OVER,
         
       // gameplay segment
@@ -171,6 +190,7 @@ module controlunit (
   const OR = 6b011110;
   const ALDR = 6b011010;
   const SHL = 6b100000;
+  const CMPLT = 6b110101;
   const CMPEQ = 6b110011;
   const CMPLE = 6b110111;
   
@@ -179,7 +199,6 @@ module controlunit (
   // const XOR = 6b010110;
   // const SHR = 6b100001;
   // const SRA = 6b100011;
-  // const CMPLT = 6b110101;
   
   always {
     alufn = 0;
@@ -229,7 +248,7 @@ module controlunit (
       gameFSM.DIFFICULTY_EASY:
         difficulty.d = 0;
         
-        rc = 4h8;
+        rc = 5h8;
         we = 1;
         wdsel = 2b01;
         
@@ -238,7 +257,7 @@ module controlunit (
       gameFSM.DIFFICULTY_NORMAL:
         difficulty.d = 1;
         
-        rc = 4h8;
+        rc = 5h8;
         we = 1;
         wdsel = 2b10;
         
@@ -247,7 +266,7 @@ module controlunit (
       gameFSM.DIFFICULTY_HARD:
         difficulty.d = 2;
         
-        rc = 4h8;
+        rc = 5h8;
         we = 1;
         wdsel = 2b11;
         
@@ -256,7 +275,7 @@ module controlunit (
       gameFSM.DIFFICULTY_INSANE:
         difficulty.d = 3;
         
-        rc = 4h8;
+        rc = 5h8;
         we = 1;
         wdsel = 2b11;
         
@@ -266,8 +285,8 @@ module controlunit (
         if (start_lunatic_button) {
           gameFSM.d = gameFSM.GAMEMODE_LUNATIC;
         }
-        else if (gameplay_button[0]) {
-          gameFSM.d = gameFSM.SET_COUNT;
+        else if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3])){
+          gameFSM.d = gameFSM.INC_COUNT;
         }
         else if (rst_button) {
           gameFSM.d = gameFSM.GAME_OVER;
@@ -298,49 +317,41 @@ module controlunit (
         
       gameFSM.INITIALIZE_LUNATIC_0:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4hf;
+        ra = 5h4;
+        rc = 5hf;
         asel = 2b00;
         we = 1;
         
-        gameFSM.d = gameFSM.SET_COUNT;
+        gameFSM.d = gameFSM.INC_COUNT;
         
       gameFSM.INITIALIZE_LUNATIC_1:
         alufn = ALDR;
-        rc = 4hf;
+        rc = 5hf;
         asel = 2b11;
         we = 1;
         
-        gameFSM.d = gameFSM.SET_COUNT;
+        gameFSM.d = gameFSM.INC_COUNT;
         
       gameFSM.INITIALIZE_LUNATIC_2:
         alufn = ALDR;
-        rc = 4hf;
+        rc = 5hf;
         asel = 2b01;
         we = 1;
         
-        gameFSM.d = gameFSM.SET_COUNT;
+        gameFSM.d = gameFSM.INC_COUNT;
         
       gameFSM.INITIALIZE_LUNATIC_3:
         alufn = ALDR;
-        rc = 4hf;
+        rc = 5hf;
         asel = 2b10;
-        we = 1;
-        
-        gameFSM.d = gameFSM.SET_COUNT;
-
-      gameFSM.SET_COUNT:
-        ra = 4h4;
-        rc = 4h7;
-        asel = 2b00;
         we = 1;
         
         gameFSM.d = gameFSM.INC_COUNT;
         
       gameFSM.INC_COUNT:
         alufn = ADD;
-        ra = 4h7;
-        rc = 4h7;
+        ra = 5h7;
+        rc = 5h7;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -387,8 +398,8 @@ module controlunit (
         
       gameFSM.ADD_LUNATIC_NOTE:
         alufn = ADD;
-        ra = 4he;
-        rc = 4he;
+        ra = 5he;
+        rc = 5he;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -411,8 +422,8 @@ module controlunit (
         
       gameFSM.EASY_LUNATIC_COUNT:
         alufn = CMPEQ;
-        ra = 4he;
-        rc = 4hd;
+        ra = 5he;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b1000;
         we = 1;
@@ -421,8 +432,8 @@ module controlunit (
         
       gameFSM.MEDIUM_LUNATIC_COUNT:
         alufn = CMPEQ;
-        ra = 4he;
-        rc = 4hd;
+        ra = 5he;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b1001;
         we = 1;
@@ -431,8 +442,8 @@ module controlunit (
          
       gameFSM.HARD_LUNATIC_COUNT:
         alufn = CMPEQ;
-        ra = 4he;
-        rc = 4hd;
+        ra = 5he;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b1010;
         we = 1;
@@ -441,8 +452,8 @@ module controlunit (
         
       gameFSM.INSANE_LUNATIC_COUNT:
         alufn = CMPEQ;
-        ra = 4he;
-        rc = 4hd;
+        ra = 5he;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b1010;
         we = 1;
@@ -450,7 +461,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_RESET_COUNT;
         
       gameFSM.BRANCH_RESET_COUNT:
-        rb = 4hd;
+        rb = 5hd;
         
         if (rb_fromreg == 16h0) {
           gameFSM.d = gameFSM.SHL_COL0;
@@ -480,8 +491,8 @@ module controlunit (
         
       gameFSM.UPDATE_LUNATIC_COL0:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4hf;
+        ra = 5h4;
+        rc = 5hf;
         asel = 2b00;
         we = 1;
         
@@ -489,7 +500,7 @@ module controlunit (
         
       gameFSM.UPDATE_LUNATIC_COL1:
         alufn = ALDR;
-        rc = 4hf;
+        rc = 5hf;
         asel = 2b11;
         we = 1;
         
@@ -497,7 +508,7 @@ module controlunit (
         
       gameFSM.UPDATE_LUNATIC_COL2:
         alufn = ALDR;
-        rc = 4hf;
+        rc = 5hf;
         asel = 2b01;
         we = 1;
         
@@ -505,7 +516,7 @@ module controlunit (
         
       gameFSM.UPDATE_LUNATIC_COL3:
         alufn = ALDR;
-        rc = 4hf;
+        rc = 5hf;
         asel = 2b10;
         we = 1;
         
@@ -513,8 +524,8 @@ module controlunit (
         
       gameFSM.RESET_COUNT:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4he;
+        ra = 5h4;
+        rc = 5he;
         asel = 2b00;
         we = 1;
         
@@ -522,8 +533,8 @@ module controlunit (
         
       gameFSM.SHL_COL0:
         alufn = SHL;
-        ra = 4h0;
-        rc = 4h0;
+        ra = 5h0;
+        rc = 5h0;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -532,8 +543,8 @@ module controlunit (
         
       gameFSM.SHL_COL1:
         alufn = SHL;
-        ra = 4h1;
-        rc = 4h1;
+        ra = 5h1;
+        rc = 5h1;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -542,8 +553,8 @@ module controlunit (
         
       gameFSM.SHL_COL2:
         alufn = SHL;
-        ra = 4h2;
-        rc = 4h2;
+        ra = 5h2;
+        rc = 5h2;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -552,8 +563,8 @@ module controlunit (
         
       gameFSM.SHL_COL3:
         alufn = SHL;
-        ra = 4h3;
-        rc = 4h3;
+        ra = 5h3;
+        rc = 5h3;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -562,9 +573,9 @@ module controlunit (
         
       gameFSM.MISS_1:
         alufn = OR;
-        ra = 4h0;
-        rb = 4h1;
-        rc = 4h9;
+        ra = 5h0;
+        rb = 5h1;
+        rc = 5h9;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -573,9 +584,9 @@ module controlunit (
         
       gameFSM.MISS_2:
         alufn = OR;
-        ra = 4h2;
-        rb = 4h9;
-        rc = 4h9;
+        ra = 5h2;
+        rb = 5h9;
+        rc = 5h9;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -584,9 +595,9 @@ module controlunit (
         
       gameFSM.MISS_3:
         alufn = OR;
-        ra = 4h3;
-        rb = 4h9;
-        rc = 4h9;
+        ra = 5h3;
+        rb = 5h9;
+        rc = 5h9;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -595,8 +606,8 @@ module controlunit (
         
       gameFSM.MISS_MASK:
         alufn = AND;
-        ra = 4h9;
-        rc = 4h9;
+        ra = 5h9;
+        rc = 5h9;
         asel = 2b00;
         bsel = 4b0101;
         we = 1;
@@ -605,8 +616,8 @@ module controlunit (
         
       gameFSM.CHECK_MISS:
         alufn = CMPEQ;
-        ra = 4h9;
-        rc = 4h9;
+        ra = 5h9;
+        rc = 5h9;
         asel = 2b00;
         bsel = 4b0101;
         we = 1;
@@ -614,7 +625,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_CHECK_MISS;
         
       gameFSM.BRANCH_CHECK_MISS:
-        rb = 4h9;
+        rb = 5h9;
         
         if (rb_fromreg == 16h0) {
           gameFSM.d = gameFSM.CHECK_COUNT;
@@ -625,8 +636,8 @@ module controlunit (
         
       gameFSM.BREAK_COMBO:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4h5;
+        ra = 5h4;
+        rc = 5h5;
         asel = 2b00;
         we = 1;
         
@@ -636,9 +647,9 @@ module controlunit (
         
       gameFSM.CHECK_COUNT:
         alufn = CMPLE;
-        ra = 4h7;
-        rb = 4h8;
-        rc = 4hd;
+        ra = 5h7;
+        rb = 5h8;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -646,7 +657,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_COUNT;
         
       gameFSM.BRANCH_COUNT:
-        rb = 4hd;
+        rb = 5hd;
         
         if (rb_fromreg == 16h0) {
           gameFSM.d = gameFSM.CLEAR_1;
@@ -673,9 +684,9 @@ module controlunit (
         
       gameFSM.CLEAR_1:
         alufn = OR;
-        ra = 4h0;
-        rb = 4h1;
-        rc = 4hd;
+        ra = 5h0;
+        rb = 5h1;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -684,9 +695,9 @@ module controlunit (
         
       gameFSM.CLEAR_2:
         alufn = OR;
-        ra = 4h2;
-        rb = 4hd;
-        rc = 4hd;
+        ra = 5h2;
+        rb = 5hd;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -695,9 +706,9 @@ module controlunit (
         
       gameFSM.CLEAR_3:
         alufn = OR;
-        ra = 4h3;
-        rb = 4hd;
-        rc = 4hd;
+        ra = 5h3;
+        rb = 5hd;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -706,8 +717,8 @@ module controlunit (
       
       gameFSM.MASK_TOP_8:
         alufn = AND;
-        ra = 4hd;
-        rc = 4hd;
+        ra = 5hd;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b1011;
         we = 1;
@@ -716,9 +727,9 @@ module controlunit (
           
       gameFSM.CHECK_CLEAR:
         alufn = CMPEQ;
-        ra = 4hd;
-        rb = 4h4;
-        rc = 4hd;
+        ra = 5hd;
+        rb = 5h4;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -726,39 +737,208 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_CLEAR;
         
       gameFSM.BRANCH_CLEAR:
-        rb = 4hd;
+        rb = 5hd;
         
         if (rb_fromreg == 16h0) {
           gameFSM.d = gameFSM.GAME_IDLE;
         }
         
         if (rb_fromreg == 16h1) {
+          gameFSM.d = gameFSM.BRANCH_SET_HIGHSCORE;
+        }
+        
+      gameFSM.BRANCH_SET_HIGHSCORE:
+        if (lunatic.q == 0) {
+          gameFSM.d = gameFSM.CHECK_SET_HIGHSCORE_NORMAL;
+        }
+        else if (lunatic.q == 1) {
+          gameFSM.d = gameFSM.CHECK_SET_HIGHSCORE_LUNATIC;
+        }
+        
+      gameFSM.CHECK_SET_HIGHSCORE_NORMAL:
+        alufn = CMPLT;
+        ra = 5h6;
+        rb = 5h10;
+        rc = 5hd;
+        asel = 2b00;
+        bsel = 4b0000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_HIGHSCORE_NORMAL;
+      
+      gameFSM.BRANCH_HIGHSCORE_NORMAL:
+        rb = 5hd;
+        
+        if (rb_fromreg == 16b1) {
+          gameFSM.d = gameFSM.DISPLAY_SCORE_NORMAL;
+        }
+        else if (rb_fromreg == 16b0) {
+          gameFSM.d = gameFSM.SET_HIGHSCORE_NORMAL;
+        }
+        
+      gameFSM.SET_HIGHSCORE_NORMAL:
+        alufn = ALDR;
+        ra = 5h6;
+        rc = 5h10;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.DISPLAY_SCORE_NORMAL;
+        
+      gameFSM.CHECK_SET_HIGHSCORE_LUNATIC:
+        alufn = CMPLT;
+        ra = 5h6;
+        rb = 5h11;
+        rc = 5hd;
+        asel = 2b00;
+        bsel = 4b0000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_HIGHSCORE_LUNATIC;
+        
+      gameFSM.BRANCH_HIGHSCORE_LUNATIC:
+        rb = 5hd;
+        
+        if (rb_fromreg == 16b1) {
           gameFSM.d = gameFSM.ENDING_LUNATIC_COUNT;
         }
+        else if (rb_fromreg == 16b0) {
+          gameFSM.d = gameFSM.SET_HIGHSCORE_LUNATIC;
+        }
+        
+      gameFSM.SET_HIGHSCORE_LUNATIC:
+        alufn = ALDR;
+        ra = 5h6;
+        rc = 5h11;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.ENDING_LUNATIC_COUNT;
         
       gameFSM.ENDING_LUNATIC_COUNT:
         lunatic.d = 0;
         
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4he;
+        ra = 5h4;
+        rc = 5he;
         asel = 2b00;
         we = 1;
         
-        gameFSM.d = gameFSM.DISPLAY_SCORE;
+        gameFSM.d = gameFSM.DISPLAY_SCORE_LUNATIC;
         
-      gameFSM.DISPLAY_SCORE:
-        if (gameplay_button[0]) {
-          gameFSM.d = gameFSM.GAME_OVER;
+      gameFSM.DISPLAY_SCORE_NORMAL:
+        if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3])) {
+          gameFSM.d = gameFSM.RESET_SCORE_SEL_NORMAL;
         }
         else {
-          gameFSM.d = gameFSM.DISPLAY_SCORE;
+          gameFSM.d = gameFSM.DISPLAY_SCORE_NORMAL;
+        }
+        
+      gameFSM.RESET_SCORE_SEL_NORMAL:
+        combo_inc = 5;
+        score_inc = 5;
+        
+        gameFSM.d = gameFSM.ADD_MAX_SCORE_NORMAL;
+        
+      gameFSM.ADD_MAX_SCORE_NORMAL:
+        alufn = ADD;
+        ra = 5h12;
+        rc = 5h12;
+        asel = 2b00;
+        bsel = 4b0100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CHECK_MAX_SCORE_NORMAL;
+      
+      gameFSM.CHECK_MAX_SCORE_NORMAL:
+        alufn = CMPLT;
+        ra = 5h12;
+        rb = 5h10;
+        rc = 5hd;
+        asel = 2b00;
+        bsel = 4b0000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_MAX_SCORE_NORMAL;
+        
+      gameFSM.BRANCH_MAX_SCORE_NORMAL:
+        rb = 5hd;
+
+        if (rb_fromreg == 16b1) {
+          score_inc = 1;
+          gameFSM.d = gameFSM.ADD_MAX_SCORE_NORMAL;
+        }
+        else if (rb_fromreg == 16b0) {
+          gameFSM.d = gameFSM.RESET_TEMP_SCORE;
+        }
+
+      gameFSM.DISPLAY_SCORE_LUNATIC:
+        if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3])) {
+          gameFSM.d = gameFSM.RESET_SCORE_SEL_LUNATIC;
+        }
+        else {
+          gameFSM.d = gameFSM.DISPLAY_SCORE_LUNATIC;
+        }
+      
+      gameFSM.RESET_SCORE_SEL_LUNATIC:
+        combo_inc = 5;
+        score_inc = 5;
+        
+        gameFSM.d = gameFSM.ADD_MAX_SCORE_LUNATIC;
+        
+      gameFSM.ADD_MAX_SCORE_LUNATIC:
+        alufn = ADD;
+        ra = 5h12;
+        rc = 5h12;
+        asel = 2b00;
+        bsel = 4b0100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CHECK_MAX_SCORE_LUNATIC;
+      
+      gameFSM.CHECK_MAX_SCORE_LUNATIC:
+        alufn = CMPLT;
+        ra = 5h12;
+        rb = 5h11;
+        rc = 5hd;
+        asel = 2b00;
+        bsel = 4b0000;
+        we = 1;
+        
+        gameFSM.d = gameFSM.BRANCH_MAX_SCORE_LUNATIC;
+        
+      gameFSM.BRANCH_MAX_SCORE_LUNATIC:
+        rb = 5hd;
+
+        if (rb_fromreg == 16b1) {
+          score_inc = 1;
+          gameFSM.d = gameFSM.ADD_MAX_SCORE_LUNATIC;
+        }
+        else if (rb_fromreg == 16b0) {
+          gameFSM.d = gameFSM.RESET_TEMP_SCORE;
+        }
+        
+      gameFSM.RESET_TEMP_SCORE:
+        alufn = ALDR;
+        ra = 5h4;
+        rc = 5h12;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.END_GAME;
+        
+      gameFSM.END_GAME:
+        if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3])) {
+          gameFSM.d = gameFSM.RESET_COMBO;
+        }
+        else {
+          gameFSM.d = gameFSM.END_GAME;
         }
         
       gameFSM.RESET_COL0:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4h0;
+        ra = 5h4;
+        rc = 5h0;
         asel = 2b00;
         we = 1;
         
@@ -766,8 +946,8 @@ module controlunit (
       
       gameFSM.RESET_COL1:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4h1;
+        ra = 5h4;
+        rc = 5h1;
         asel = 2b00;
         we = 1;
         
@@ -775,8 +955,8 @@ module controlunit (
         
       gameFSM.RESET_COL2:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4h2;
+        ra = 5h4;
+        rc = 5h2;
         asel = 2b00;
         we = 1;
         
@@ -784,19 +964,37 @@ module controlunit (
         
       gameFSM.RESET_COL3:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4h3;
+        ra = 5h4;
+        rc = 5h3;
         asel = 2b00;
         we = 1;
         
         gameFSM.d = gameFSM.RESET_LUNATIC_COUNT;
-        
+      
       gameFSM.RESET_LUNATIC_COUNT:
         lunatic.d = 0;
         
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4he;
+        ra = 5h4;
+        rc = 5he;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_COMBO;
+        
+      gameFSM.RESET_COMBO:
+        alufn = ALDR;
+        ra = 5h4;
+        rc = 5h5;
+        asel = 2b00;
+        we = 1;
+        
+        gameFSM.d = gameFSM.RESET_SCORE;
+        
+      gameFSM.RESET_SCORE:
+        alufn = ALDR;
+        ra = 5h4;
+        rc = 5h6;
         asel = 2b00;
         we = 1;
         
@@ -804,8 +1002,8 @@ module controlunit (
         
       gameFSM.GAME_OVER:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4h5;
+        ra = 5h4;
+        rc = 5h7;
         asel = 2b00;
         we = 1;
         
@@ -818,8 +1016,8 @@ module controlunit (
       // scoring component of the FSM
       gameFSM.PUSH_COL0:
         alufn = ALDR;
-        ra = 4h0;
-        rc = 4ha;
+        ra = 5h0;
+        rc = 5ha;
         asel = 2b00;
         we = 1;
         
@@ -827,8 +1025,8 @@ module controlunit (
         
       gameFSM.PUSH_COL1:
         alufn = ALDR;
-        ra = 4h1;
-        rc = 4ha;
+        ra = 5h1;
+        rc = 5ha;
         asel = 2b00;
         we = 1;
         
@@ -836,8 +1034,8 @@ module controlunit (
         
       gameFSM.PUSH_COL2:
         alufn = ALDR;
-        ra = 4h2;
-        rc = 4ha;
+        ra = 5h2;
+        rc = 5ha;
         asel = 2b00;
         we = 1;
         
@@ -845,8 +1043,8 @@ module controlunit (
         
       gameFSM.PUSH_COL3:
         alufn = ALDR;
-        ra = 4h3;
-        rc = 4ha;
+        ra = 5h3;
+        rc = 5ha;
         asel = 2b00;
         we = 1;
         
@@ -854,16 +1052,16 @@ module controlunit (
         
       gameFSM.STORE_COL0:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4hb;
+        ra = 5h4;
+        rc = 5hb;
         asel = 2b00;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_CHECK_INPUT;
         
       gameFSM.STORE_COL1:
-        ra = 4h4;
-        rc = 4hb;
+        ra = 5h4;
+        rc = 5hb;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -872,7 +1070,7 @@ module controlunit (
         
       gameFSM.STORE_COL2:
         alufn = ALDR;
-        rc = 4hb;
+        rc = 5hb;
         asel = 2b01;
         we = 1;
         
@@ -880,14 +1078,14 @@ module controlunit (
         
       gameFSM.STORE_COL3:
         alufn = ALDR;
-        rc = 4hb;
+        rc = 5hb;
         asel = 2b10;
         we = 1;
         
         gameFSM.d = gameFSM.BRANCH_CHECK_INPUT;
         
       gameFSM.BRANCH_CHECK_INPUT:
-        rb = 4ha;
+        rb = 5ha;
         
         if (rb_fromreg[6] == 1) {
           gameFSM.d = gameFSM.COMBO_PERFECT;
@@ -904,8 +1102,8 @@ module controlunit (
         
       gameFSM.COMBO_PERFECT:
         alufn = ADD;
-        ra = 4h5;
-        rc = 4h5;
+        ra = 5h5;
+        rc = 5h5;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -915,7 +1113,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_SCORE_PERFECT;
         
       gameFSM.BRANCH_SCORE_PERFECT:
-        rb = 4h5;
+        rb = 5h5;
         
         if (rb_fromreg <= 20){
           gameFSM.d = gameFSM.MULTIPLIER_1_PERFECT;
@@ -929,7 +1127,7 @@ module controlunit (
       
       gameFSM.MULTIPLIER_1_PERFECT:
         alufn = MUL;
-        rc = 4hc;
+        rc = 5hc;
         asel = 2b10;
         bsel = 4b0100;
         we = 1;
@@ -938,7 +1136,7 @@ module controlunit (
         
       gameFSM.MULTIPLIER_2_PERFECT:
         alufn = MUL;
-        rc = 4hc;
+        rc = 5hc;
         asel = 2b10;
         bsel = 4b0110;
         we = 1;
@@ -947,7 +1145,7 @@ module controlunit (
         
       gameFSM.MULTIPLIER_4_PERFECT:
         alufn = MUL;
-        rc = 4hc;
+        rc = 5hc;
         asel = 2b10;
         bsel = 4b0111;
         we = 1;
@@ -964,9 +1162,9 @@ module controlunit (
         
       gameFSM.CHECK_LUNATIC_ROW_PERFECT:
         alufn = CMPEQ;
-        ra = 4hb;
-        rb = 4hf;
-        rc = 4hd;
+        ra = 5hb;
+        rb = 5hf;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -974,7 +1172,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_CHECK_LUNATIC_ROW_PERFECT;
         
       gameFSM.BRANCH_CHECK_LUNATIC_ROW_PERFECT:
-        rb = 4hd;
+        rb = 5hd;
         
         if (rb_fromreg == 0) {
           gameFSM.d = gameFSM.ADD_PERFECT;
@@ -985,8 +1183,8 @@ module controlunit (
         
       gameFSM.MULITPLIER_LUNATIC_PERFECT:
         alufn = MUL;
-        ra = 4hc;
-        rc = 4hc;
+        ra = 5hc;
+        rc = 5hc;
         asel = 2b00;
         bsel = 4b0110;
         we = 1;
@@ -995,9 +1193,9 @@ module controlunit (
         
       gameFSM.ADD_PERFECT:
         alufn = ADD;
-        ra = 4h6;
-        rb = 4hc;
-        rc = 4h6;
+        ra = 5h6;
+        rb = 5hc;
+        rc = 5h6;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -1005,7 +1203,7 @@ module controlunit (
         gameFSM.d = gameFSM.RECORD_PERFECT;
        
       gameFSM.RECORD_PERFECT:
-        rb = 4hc;
+        rb = 5hc;
         
         score_inc = rb_fromreg;
         
@@ -1013,8 +1211,8 @@ module controlunit (
          
       gameFSM.CLEAR_PERFECT:
         alufn = AND;
-        ra = 4ha;
-        rc = 4ha;
+        ra = 5ha;
+        rc = 5ha;
         asel = 2b00;
         bsel = 4b0001;
         we = 1;
@@ -1023,8 +1221,8 @@ module controlunit (
         
       gameFSM.COMBO_GOOD:
         alufn = ADD;
-        ra = 4h5;
-        rc = 4h5;
+        ra = 5h5;
+        rc = 5h5;
         asel = 2b00;
         bsel = 4b0100;
         we = 1;
@@ -1034,7 +1232,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_SCORE_GOOD;
         
       gameFSM.BRANCH_SCORE_GOOD:
-        rb = 4h5;
+        rb = 5h5;
         
         if (rb_fromreg <= 20){
           gameFSM.d = gameFSM.MULTIPLIER_1_GOOD;
@@ -1048,7 +1246,7 @@ module controlunit (
         
       gameFSM.MULTIPLIER_1_GOOD:
         alufn = MUL;
-        rc = 4hc;
+        rc = 5hc;
         asel = 2b01;
         bsel = 4b0100;
         we = 1;
@@ -1057,7 +1255,7 @@ module controlunit (
         
       gameFSM.MULTIPLIER_2_GOOD:
         alufn = MUL;
-        rc = 4hc;
+        rc = 5hc;
         asel = 2b01;
         bsel = 4b0110;
         we = 1;
@@ -1066,7 +1264,7 @@ module controlunit (
         
       gameFSM.MULTIPLIER_4_GOOD:
         alufn = MUL;
-        rc = 4hc;
+        rc = 5hc;
         asel = 2b01;
         bsel = 4b0111;
         we = 1;
@@ -1083,9 +1281,9 @@ module controlunit (
         
       gameFSM.CHECK_LUNATIC_ROW_GOOD:
         alufn = CMPEQ;
-        ra = 4hb;
-        rb = 4hf;
-        rc = 4hd;
+        ra = 5hb;
+        rb = 5hf;
+        rc = 5hd;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -1093,7 +1291,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_CHECK_LUNATIC_ROW_GOOD;
         
       gameFSM.BRANCH_CHECK_LUNATIC_ROW_GOOD:
-        rb = 4hd;
+        rb = 5hd;
         
         if (rb_fromreg == 0) {
           gameFSM.d = gameFSM.ADD_GOOD;
@@ -1104,8 +1302,8 @@ module controlunit (
         
       gameFSM.MULITPLIER_LUNATIC_GOOD:
         alufn = MUL;
-        ra = 4hc;
-        rc = 4hc;
+        ra = 5hc;
+        rc = 5hc;
         asel = 2b00;
         bsel = 4b0110;
         we = 1;
@@ -1114,9 +1312,9 @@ module controlunit (
         
       gameFSM.ADD_GOOD:
         alufn = ADD;
-        ra = 4h6;
-        rb = 4hc;
-        rc = 4h6;
+        ra = 5h6;
+        rb = 5hc;
+        rc = 5h6;
         asel = 2b00;
         bsel = 4b0000;
         we = 1;
@@ -1124,7 +1322,7 @@ module controlunit (
         gameFSM.d = gameFSM.RECORD_GOOD;
         
       gameFSM.RECORD_GOOD:
-        rb = 4hc;
+        rb = 5hc;
         
         score_inc = rb_fromreg;
         
@@ -1132,8 +1330,8 @@ module controlunit (
         
       gameFSM.CLEAR_GOOD:
         alufn = AND;
-        ra = 4ha;
-        rc = 4ha;
+        ra = 5ha;
+        rc = 5ha;
         asel = 2b00;
         bsel = 4b0010;
         we = 1;
@@ -1142,8 +1340,8 @@ module controlunit (
         
       gameFSM.COMBO_MISS:
         alufn = ALDR;
-        ra = 4h4;
-        rc = 4h5;
+        ra = 5h4;
+        rc = 5h5;
         asel = 2b00;
         we = 1;
         
@@ -1153,8 +1351,8 @@ module controlunit (
         
       gameFSM.CLEAR_MISS:
         alufn = AND;
-        ra = 4ha;
-        rc = 4ha;
+        ra = 5ha;
+        rc = 5ha;
         asel = 2b00;
         bsel = 4b0011;
         we = 1;
@@ -1162,7 +1360,7 @@ module controlunit (
         gameFSM.d = gameFSM.BRANCH_UPDATE_COLUMN;
         
       gameFSM.BRANCH_UPDATE_COLUMN:
-        rb = 4hb;
+        rb = 5hb;
         
         if (rb_fromreg == 16h0) {
           gameFSM.d = gameFSM.UPDATE_COL0;
@@ -1179,8 +1377,8 @@ module controlunit (
         
       gameFSM.UPDATE_COL0:
         alufn = ALDR;
-        ra = 4ha;
-        rc = 4h0;
+        ra = 5ha;
+        rc = 5h0;
         asel = 2b00;
         we = 1;
         
@@ -1188,8 +1386,8 @@ module controlunit (
         
       gameFSM.UPDATE_COL1:
         alufn = ALDR;
-        ra = 4ha;
-        rc = 4h1;
+        ra = 5ha;
+        rc = 5h1;
         asel = 2b00;
         we = 1;
         
@@ -1197,8 +1395,8 @@ module controlunit (
         
       gameFSM.UPDATE_COL2:
         alufn = ALDR;
-        ra = 4ha;
-        rc = 4h2;
+        ra = 5ha;
+        rc = 5h2;
         asel = 2b00;
         we = 1;
         
@@ -1206,8 +1404,8 @@ module controlunit (
       
       gameFSM.UPDATE_COL3:
         alufn = ALDR;
-        ra = 4ha;
-        rc = 4h3;
+        ra = 5ha;
+        rc = 5h3;
         asel = 2b00;
         we = 1;
         
@@ -1223,8 +1421,8 @@ module controlunit (
         
       gameFSM.TEMP_STORE_COL0:
         alufn = ALDR;
-        ra = 4h0;
-        rc = 4ha;
+        ra = 5h0;
+        rc = 5h13;
         asel = 2b00;
         we = 1;
         
@@ -1232,8 +1430,8 @@ module controlunit (
         
       gameFSM.LEFT_COL0:
         alufn = ALDR;
-        ra = 4h1;
-        rc = 4h0;
+        ra = 5h1;
+        rc = 5h0;
         asel = 2b00;
         we = 1;
         
@@ -1241,8 +1439,8 @@ module controlunit (
         
       gameFSM.LEFT_COL1:
         alufn = ALDR;
-        ra = 4h2;
-        rc = 4h1;
+        ra = 5h2;
+        rc = 5h1;
         asel = 2b00;
         we = 1;
         
@@ -1250,8 +1448,8 @@ module controlunit (
         
       gameFSM.LEFT_COL2:
         alufn = ALDR;
-        ra = 4h3;
-        rc = 4h2;
+        ra = 5h3;
+        rc = 5h2;
         asel = 2b00;
         we = 1;
         
@@ -1259,8 +1457,8 @@ module controlunit (
         
       gameFSM.LEFT_COL3:
         alufn = ALDR;
-        ra = 4ha;
-        rc = 4h3;
+        ra = 5h13;
+        rc = 5h3;
         asel = 2b00;
         we = 1;
         
@@ -1276,8 +1474,8 @@ module controlunit (
         
       gameFSM.TEMP_STORE_COL3:
         alufn = ALDR;
-        ra = 4h3;
-        rc = 4ha;
+        ra = 5h3;
+        rc = 5h13;
         asel = 2b00;
         we = 1;
         
@@ -1285,8 +1483,8 @@ module controlunit (
       
       gameFSM.RIGHT_COL3:
         alufn = ALDR;
-        ra = 4h2;
-        rc = 4h3;
+        ra = 5h2;
+        rc = 5h3;
         asel = 2b00;
         we = 1;
         
@@ -1294,8 +1492,8 @@ module controlunit (
         
       gameFSM.RIGHT_COL2:
         alufn = ALDR;
-        ra = 4h1;
-        rc = 4h2;
+        ra = 5h1;
+        rc = 5h2;
         asel = 2b00;
         we = 1;
         
@@ -1303,8 +1501,8 @@ module controlunit (
         
       gameFSM.RIGHT_COL1:
         alufn = ALDR;
-        ra = 4h0;
-        rc = 4h1;
+        ra = 5h0;
+        rc = 5h1;
         asel = 2b00;
         we = 1;
         
@@ -1312,8 +1510,8 @@ module controlunit (
         
       gameFSM.RIGHT_COL0:
         alufn = ALDR;
-        ra = 4ha;
-        rc = 4h0;
+        ra = 5h13;
+        rc = 5h0;
         asel = 2b00;
         we = 1;
         

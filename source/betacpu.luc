@@ -139,7 +139,7 @@ module betacpu (
     case(game_cu.wdsel){
       b01: game_reg.data = 16h32;
       b10: game_reg.data = 16h64;
-      b11: game_reg.data = 16hc8;
+      b11: game_reg.data = 16hC8;
       default: game_reg.data = game_alu.c;
     }
     
