@@ -104,14 +104,14 @@ module controlunit (
       ENDING_LUNATIC_COUNT,
       DISPLAY_SCORE_NORMAL,
       RESET_SCORE_SEL_NORMAL,
-      ADD_MAX_SCORE_NORMAL,
       CHECK_MAX_SCORE_NORMAL,
       BRANCH_MAX_SCORE_NORMAL,
+      ADD_MAX_SCORE_NORMAL,
       DISPLAY_SCORE_LUNATIC,
       RESET_SCORE_SEL_LUNATIC,
-      ADD_MAX_SCORE_LUNATIC,
       CHECK_MAX_SCORE_LUNATIC,
       BRANCH_MAX_SCORE_LUNATIC,
+      ADD_MAX_SCORE_LUNATIC,
       RESET_TEMP_SCORE,
       END_GAME,
       RESET_COL0,
@@ -838,18 +838,8 @@ module controlunit (
         combo_inc = 5;
         score_inc = 5;
         
-        gameFSM.d = gameFSM.ADD_MAX_SCORE_NORMAL;
-        
-      gameFSM.ADD_MAX_SCORE_NORMAL:
-        alufn = ADD;
-        ra = 5h12;
-        rc = 5h12;
-        asel = 2b00;
-        bsel = 4b0100;
-        we = 1;
-        
         gameFSM.d = gameFSM.CHECK_MAX_SCORE_NORMAL;
-      
+        
       gameFSM.CHECK_MAX_SCORE_NORMAL:
         alufn = CMPLT;
         ra = 5h12;
@@ -865,13 +855,24 @@ module controlunit (
         rb = 5hd;
 
         if (rb_fromreg == 16b1) {
-          score_inc = 1;
           gameFSM.d = gameFSM.ADD_MAX_SCORE_NORMAL;
         }
         else if (rb_fromreg == 16b0) {
           gameFSM.d = gameFSM.RESET_TEMP_SCORE;
         }
-
+        
+      gameFSM.ADD_MAX_SCORE_NORMAL:
+        score_inc = 1;
+        
+        alufn = ADD;
+        ra = 5h12;
+        rc = 5h12;
+        asel = 2b00;
+        bsel = 4b0100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CHECK_MAX_SCORE_NORMAL;
+          
       gameFSM.DISPLAY_SCORE_LUNATIC:
         if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3])) {
           gameFSM.d = gameFSM.RESET_SCORE_SEL_LUNATIC;
@@ -884,18 +885,8 @@ module controlunit (
         combo_inc = 5;
         score_inc = 5;
         
-        gameFSM.d = gameFSM.ADD_MAX_SCORE_LUNATIC;
-        
-      gameFSM.ADD_MAX_SCORE_LUNATIC:
-        alufn = ADD;
-        ra = 5h12;
-        rc = 5h12;
-        asel = 2b00;
-        bsel = 4b0100;
-        we = 1;
-        
         gameFSM.d = gameFSM.CHECK_MAX_SCORE_LUNATIC;
-      
+        
       gameFSM.CHECK_MAX_SCORE_LUNATIC:
         alufn = CMPLT;
         ra = 5h12;
@@ -911,12 +902,23 @@ module controlunit (
         rb = 5hd;
 
         if (rb_fromreg == 16b1) {
-          score_inc = 1;
           gameFSM.d = gameFSM.ADD_MAX_SCORE_LUNATIC;
         }
         else if (rb_fromreg == 16b0) {
           gameFSM.d = gameFSM.RESET_TEMP_SCORE;
         }
+        
+      gameFSM.ADD_MAX_SCORE_LUNATIC:
+        score_inc = 1;
+        
+        alufn = ADD;
+        ra = 5h12;
+        rc = 5h12;
+        asel = 2b00;
+        bsel = 4b0100;
+        we = 1;
+        
+        gameFSM.d = gameFSM.CHECK_MAX_SCORE_LUNATIC;
         
       gameFSM.RESET_TEMP_SCORE:
         alufn = ALDR;
