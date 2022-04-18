@@ -125,7 +125,7 @@ module regfile (
           default: out_b = 0;
     }
     
-    // outputs sent to betacpu 
+    // outputs sent to betacpu to be displayed constantly
     column_1 = col0.q;
     column_2 = col1.q;
     column_3 = col2.q;

@@ -47,7 +47,7 @@ module betacpu (
     clock_detector.in = 0;
     game_cu.slow_clock_in = 0;
     
-    if (game_cu.set_speed == 0) { //DIFFICULTY = EASY
+    if (game_cu.set_speed == 0) {      //DIFFICULTY = EASY
         clock_detector.in = slow_timer_0.value;
         game_cu.slow_clock_in = clock_detector.out;
     }
@@ -59,7 +59,7 @@ module betacpu (
         clock_detector.in = slow_timer_2.value;
         game_cu.slow_clock_in = clock_detector.out;
     }
-    else if (game_cu.set_speed == 3) { //DIFFICULTY = HARD
+    else if (game_cu.set_speed == 3) { //DIFFICULTY = INSANE
         clock_detector.in = slow_timer_3.value;
         game_cu.slow_clock_in = clock_detector.out;
     }
@@ -73,10 +73,10 @@ module betacpu (
     // check for lunatic row if its valid 
     lunaticrom.address = game_reg.column_lunatic[1:0];
     if (game_cu.lunatic_check == 0){
-      lunatic_valid = 4b0000;
+      lunatic_valid = 4b0000;           // lunatic not enabled, all lights turned off
     }
     else {
-      lunatic_valid = lunaticrom.value;
+      lunatic_valid = lunaticrom.value; // pulls the value from the ROM to turn on the light in one lane
     }
     column_lunatic = lunatic_valid;
     

@@ -7,10 +7,10 @@ module controlunit (
     input gameplay_button[4],
     input shifter_button[2],
     
-    input rb_fromreg[16],
-    input randgen_add[2],
-    input randgen_lunatic[2],
-    input slow_clock_in,
+    input rb_fromreg[16],      // retrieves information from register input in rb directly
+    input randgen_add[2],      // randomly generate which row to add new note into
+    input randgen_lunatic[2],  // randomly generate which row is the bonus points for lunatic
+    input slow_clock_in,       // takes the speed of the clock from the betacpu to control the speed of notes added
     
     //signals
     output alufn[6],
@@ -22,7 +22,7 @@ module controlunit (
     output we,
     output wdsel[2],
     
-    output set_speed[2],
+    output set_speed[2],        
     output combo_inc[16],
     output score_inc[16],
     
@@ -88,12 +88,14 @@ module controlunit (
       STORE_RAND,
       ADD_NOTE,
       
+      // check if the the max number of notes have been added, if so either clear the remaining notes added previously
       CLEAR_1,
       CLEAR_2,
       CLEAR_3,
       MASK_TOP_8,
       CHECK_CLEAR,
       BRANCH_CLEAR,
+      // if all notes cleared, update and show highscore
       BRANCH_SET_HIGHSCORE,
       CHECK_SET_HIGHSCORE_NORMAL,
       BRANCH_HIGHSCORE_NORMAL,
@@ -114,16 +116,18 @@ module controlunit (
       ADD_MAX_SCORE_LUNATIC,
       RESET_TEMP_SCORE,
       END_GAME,
+      // if reset button pressed, clear all the lanes of lights
       RESET_COL0,
       RESET_COL1,
       RESET_COL2,
       RESET_COL3,
       RESET_LUNATIC_COUNT,
+      // reset all necessary registers to 0 for a fresh new game
       RESET_COMBO,
       RESET_SCORE,
       GAME_OVER,
         
-      // gameplay segment
+      // gameplay segment, button pressed
       PUSH_COL0,
       PUSH_COL1,
       PUSH_COL2,
@@ -132,7 +136,7 @@ module controlunit (
       STORE_COL1,
       STORE_COL2,
       STORE_COL3,
-      
+      // score calculation
       BRANCH_CHECK_INPUT,
       COMBO_PERFECT,
       BRANCH_SCORE_PERFECT,
@@ -160,7 +164,7 @@ module controlunit (
       CLEAR_GOOD,
       COMBO_MISS,
       CLEAR_MISS,
-      
+      // remove the light of the lane corresponding to the input button
       BRANCH_UPDATE_COLUMN,
       UPDATE_COL0,
       UPDATE_COL1,
@@ -210,11 +214,11 @@ module controlunit (
     we = 0;
     wdsel = 0;
     
-    set_speed = difficulty.q;
-    combo_inc = 0;
-    score_inc = 0;
+    set_speed = difficulty.q;  // send difficulty to the betacpu to determine the speed of the clock
+    combo_inc = 0;             // send the increase in combo to the 7 segment
+    score_inc = 0;             // send the increase in score to the 7 segment
     
-    lunatic_check = lunatic.q;
+    lunatic_check = lunatic.q; // checks if lunatic difficulty is enabled and sends it to the betacpu to enable the lunatic lights
     
     case (gameFSM.q){
       gameFSM.GAME_START:
@@ -239,7 +243,7 @@ module controlunit (
           gameFSM.d = gameFSM.DIFFICULTY_INSANE;
         }
         else if (rst_button) {
-          gameFSM.d = gameFSM.GAME_OVER;
+          gameFSM.d = gameFSM.RESET_COMBO;
         }
         else {
           gameFSM.d = gameFSM.WAIT_DIFFICULTY;
@@ -289,7 +293,7 @@ module controlunit (
           gameFSM.d = gameFSM.INC_COUNT;
         }
         else if (rst_button) {
-          gameFSM.d = gameFSM.GAME_OVER;
+          gameFSM.d = gameFSM.RESET_COMBO;
         }  
         else {
           gameFSM.d = gameFSM.SPECIAL_GAMEMODE;
@@ -830,6 +834,9 @@ module controlunit (
         if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3])) {
           gameFSM.d = gameFSM.RESET_SCORE_SEL_NORMAL;
         }
+        else if (rst_button) {
+          gameFSM.d = gameFSM.RESET_COL0;
+        }
         else {
           gameFSM.d = gameFSM.DISPLAY_SCORE_NORMAL;
         }
@@ -876,6 +883,9 @@ module controlunit (
       gameFSM.DISPLAY_SCORE_LUNATIC:
         if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3])) {
           gameFSM.d = gameFSM.RESET_SCORE_SEL_LUNATIC;
+        }
+        else if (rst_button) {
+          gameFSM.d = gameFSM.RESET_COL0;
         }
         else {
           gameFSM.d = gameFSM.DISPLAY_SCORE_LUNATIC;
@@ -930,7 +940,7 @@ module controlunit (
         gameFSM.d = gameFSM.END_GAME;
         
       gameFSM.END_GAME:
-        if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3])) {
+        if ((gameplay_button[0]) || (gameplay_button[1]) || (gameplay_button[2]) || (gameplay_button[3]) || rst_button) {
           gameFSM.d = gameFSM.RESET_COMBO;
         }
         else {

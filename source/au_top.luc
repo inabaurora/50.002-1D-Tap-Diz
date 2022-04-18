@@ -1,27 +1,27 @@
 module au_top (
-    input clk,              // 100MHz clock
-    input rst_n,            // reset button (active low)
-    output led [8],         // 8 user controllable LEDs
-    input usb_rx,           // USB->Serial input
-    output usb_tx,           // USB->Serial output
+    input clk,                  // 100MHz clock
+    input rst_n,                // reset button (active low)
+    output led [8],             // 8 user controllable LEDs
+    input usb_rx,               // USB->Serial input
+    output usb_tx,              // USB->Serial output
     
-    input start_lunatic_button,
-    input rst_button,
-    input gameplay_button[4], // 4 buttons for gameplay 
-    input shifter_button[2], // 2 buttons for shifting columns 
+    input start_lunatic_button, // start the game/enable lunatic mode
+    input rst_button,           // reset the game 
+    input gameplay_button[4],   // 4 buttons for gameplay 
+    input shifter_button[2],    // 2 buttons for shifting columns 
     
-    output lane_1_LED[7], // 4 lanes of LEDs showing cascading notes 
+    output lane_1_LED[7],       // 4 lanes of LEDs showing cascading notes 
     output lane_2_LED[7],
     output lane_3_LED[7],
     output lane_4_LED[7],
     
-    output lunatic_LED[4],
+    output lunatic_LED[4],      // show the current lane which awards bonus points in lunatic mode
     
-    output combo_seg[7], // 7 segment for the combo count
-    output combo_sel[4], // selection of 7 segment for combo
+    output combo_seg[7],        // 7 segment for the combo count
+    output combo_sel[4],        // selection of 7 segment for combo
     
-    output score_seg[7], // 7 segment for the score
-    output score_sel[4]  // selection of 7 segment for score
+    output score_seg[7],        // 7 segment for the score
+    output score_sel[4]         // selection of 7 segment for score
   ) {
   
   sig rst;                  // reset signal
@@ -80,6 +80,7 @@ module au_top (
     
     lunatic_LED = game_beta.column_lunatic[3:0];
     
+    // sends the current combo and score to the seg and sel
     combo_dec_ctr.inc = game_beta.comboinc;
     score_dec_ctr.inc = game_beta.scoreinc;
     seg_combo.values = combo_dec_ctr.digits;
